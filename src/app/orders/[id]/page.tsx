@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
+import PageTransition from '@/components/page-transition';
 import { useApp } from '@/context/AppContext';
 import { formatRupiah, formatDate, getOrderStatusInfo, getPaymentStatusInfo } from '@/lib/utils';
 import {
@@ -105,14 +106,14 @@ function OrderDetailContent() {
       <div className="flex items-center justify-between">
         <Link
           href="/orders"
-          className="text-xs font-semibold text-slate-500 hover:text-polsri-600 flex items-center gap-1.5"
+          className="text-xs font-semibold text-slate-500 hover:text-polsri-600 flex items-center gap-1.5 btn-press"
         >
           <ArrowLeft className="w-4 h-4" /> Kembali ke Riwayat Pesanan
         </Link>
 
         <button
           onClick={handlePrint}
-          className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 shadow-sm print:hidden"
+          className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 shadow-sm print:hidden hover-lift-sm"
         >
           <Printer className="w-3.5 h-3.5 text-slate-500" />
           Cetak Invoice
@@ -121,7 +122,7 @@ function OrderDetailContent() {
 
       {/* Success Alert Banner if just paid */}
       {paymentQuery === 'success' && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm flex items-start gap-3 shadow-sm print:hidden">
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm flex items-start gap-3 shadow-sm print:hidden animate-in fade-in duration-200">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-bold">Pembayaran Berhasil Diverifikasi Midtrans!</p>
@@ -341,7 +342,7 @@ function OrderDetailContent() {
             <button
               onClick={handleManualPaySimulation}
               disabled={paying}
-              className="px-5 py-2.5 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl text-xs font-bold shadow-md transition-all whitespace-nowrap"
+              className="px-5 py-2.5 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl text-xs font-bold shadow-md transition-all whitespace-nowrap btn-press"
             >
               {paying ? 'Memverifikasi...' : 'Bayar Sekarang (Midtrans)'}
             </button>
@@ -365,9 +366,11 @@ export default function OrderDetailPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <Suspense fallback={<div className="p-12 text-center text-xs text-slate-400">Memuat rincian pesanan...</div>}>
-        <OrderDetailContent />
-      </Suspense>
+      <PageTransition>
+        <Suspense fallback={<div className="p-12 text-center text-xs text-slate-400">Memuat rincian pesanan...</div>}>
+          <OrderDetailContent />
+        </Suspense>
+      </PageTransition>
       <Footer />
     </div>
   );

@@ -15,10 +15,32 @@
   }
 }
 
+/* Lenis Smooth Scroll Recommended CSS */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
@@ -31,7 +53,24 @@
   background: #94a3b8;
 }
 
-/* Smooth transitions */
-.transition-smooth {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+/* Simple, lightweight CSS hover utilities */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease-out;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.hover-lift-sm {
+  transition: transform 0.15s ease-out;
+}
+.hover-lift-sm:hover {
+  transform: translateY(-1px);
+}
+
+.btn-press {
+  transition: transform 0.1s ease-in-out;
+}
+.btn-press:active {
+  transform: scale(0.97);
 }

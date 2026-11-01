@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import AdminSidebar from '@/components/admin/sidebar';
 import AdminHeader from '@/components/admin/admin-header';
+import PageTransition from '@/components/page-transition';
 import { useApp } from '@/context/AppContext';
 import { ShieldAlert, ArrowRight, Store } from 'lucide-react';
 
@@ -31,7 +32,7 @@ export default function AdminLayout({
           <div className="space-y-3">
             <button
               onClick={() => switchUserRole('admin')}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all"
+              className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 hover-lift btn-press"
             >
               <span>Masuk Sebagai Admin PMW (Mode Demo)</span>
               <ArrowRight className="w-4 h-4" />
@@ -39,7 +40,7 @@ export default function AdminLayout({
 
             <Link
               href="/"
-              className="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl text-xs flex items-center justify-center gap-2 transition-colors btn-press"
             >
               <Store className="w-4 h-4 text-slate-400" />
               <span>Kembali ke Halaman Pelanggan</span>
@@ -56,7 +57,9 @@ export default function AdminLayout({
       <div className="flex-1 flex flex-col min-w-0">
         <AdminHeader />
         <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
       </div>
     </div>

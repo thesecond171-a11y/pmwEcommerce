@@ -111,3 +111,4 @@ export function verifyMidtransSignature(
     .digest('hex');
   return hash === signatureKey;
 }
+

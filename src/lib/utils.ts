@@ -94,3 +94,4 @@ export function getPaymentStatusInfo(status: PaymentStatus): { label: string; co
       return { label: status, color: "text-slate-600 bg-slate-50 border-slate-200" };
   }
 }
+

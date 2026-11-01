@@ -386,3 +386,4 @@ INSERT INTO public.products (title, slug, description, price, stock, student_nam
     110
 )
 ON CONFLICT (slug) DO NOTHING;
+

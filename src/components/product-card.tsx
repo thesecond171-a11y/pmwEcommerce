@@ -6,6 +6,7 @@ import { Star, ShoppingCart, Check, UserCheck, AlertCircle } from 'lucide-react'
 import { Product } from '@/types';
 import { formatRupiah } from '@/lib/utils';
 import { useApp } from '@/context/AppContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductCardProps {
   product: Product;
@@ -31,13 +32,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=80';
 
   return (
-    <div className="group bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-card hover:shadow-card-hover hover:border-polsri-200 transition-all duration-300 flex flex-col h-full">
+    <div className="group bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-card hover-lift hover:border-polsri-300 hover:shadow-card-hover flex flex-col h-full">
       {/* Product Image Container */}
       <Link href={`/products/${product.id}`} className="relative block aspect-square overflow-hidden bg-slate-100">
         <img
           src={imageSrc}
           alt={product.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
           loading="lazy"
         />
 
@@ -95,12 +96,13 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span className="text-[11px]">{product.sold_count} terjual</span>
           </div>
 
-          {/* Add to Cart Button */}
+          {/* Add to Cart Button with Motion micro-interaction */}
           <div className="mt-3">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.96 }}
               onClick={handleAddToCart}
               disabled={product.stock <= 0}
-              className={`w-full py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 ${
+              className={`w-full py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 ${
                 product.stock <= 0
                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   : added
@@ -108,16 +110,30 @@ export default function ProductCard({ product }: ProductCardProps) {
                   : 'bg-polsri-50 text-polsri-700 hover:bg-polsri-600 hover:text-white border border-polsri-200/80 hover:border-transparent'
               }`}
             >
-              {added ? (
-                <>
-                  <Check className="w-3.5 h-3.5" /> Ditambahkan!
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-3.5 h-3.5" /> + Keranjang
-                </>
-              )}
-            </button>
+              <AnimatePresence mode="wait">
+                {added ? (
+                  <motion.span
+                    key="added"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="flex items-center gap-1"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Ditambahkan!
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="add"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center gap-1"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" /> + Keranjang
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
           </div>
         </div>
       </div>

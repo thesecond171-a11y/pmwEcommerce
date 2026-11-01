@@ -6,7 +6,9 @@ import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
 import BannerSlider from '@/components/banner-slider';
 import ProductCard from '@/components/product-card';
+import PageTransition from '@/components/page-transition';
 import { useApp } from '@/context/AppContext';
+import { motion, type Variants } from 'framer-motion';
 import {
   UtensilsCrossed,
   Shirt,
@@ -21,6 +23,25 @@ import {
   Building2,
   CheckCircle2
 } from 'lucide-react';
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: 'easeOut' },
+  },
+};
 
 export default function HomePage() {
   const { products, categories, setSelectedCategory } = useApp();
@@ -49,147 +70,172 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-12">
-        {/* Hero Banner Section */}
-        <BannerSlider />
+      <PageTransition>
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-12">
+          {/* Hero Banner Section */}
+          <BannerSlider />
 
-        {/* Categories Grid */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <span className="w-2.5 h-6 bg-polsri-600 rounded-full inline-block" />
-                Kategori Produk Mahasiswa
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Pilih kategori produk karya mahasiswa Politeknik Negeri Sriwijaya
-              </p>
-            </div>
-            <Link
-              href="/products"
-              className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group"
-            >
-              <span>Semua Kategori</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
-            {categories.map((category) => {
-              const count = products.filter((p) => p.category_id === category.id).length;
-              return (
-                <Link
-                  key={category.id}
-                  href={`/products?category=${category.slug}`}
-                  onClick={() => setSelectedCategory(category.slug)}
-                  className="group bg-white p-4 rounded-2xl border border-slate-200/80 hover:border-polsri-300 hover:shadow-card-hover transition-all duration-200 flex flex-col items-center text-center"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-polsri-50 group-hover:bg-polsri-100/70 group-hover:scale-110 transition-all flex items-center justify-center mb-3">
-                    {getCategoryIcon(category.icon)}
-                  </div>
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-polsri-600 transition-colors">
-                    {category.name}
-                  </h3>
-                  <span className="text-[11px] text-slate-400 mt-0.5">{count} Produk</span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Featured Products Section */}
-        <section className="bg-gradient-to-b from-polsri-50/50 to-transparent p-4 sm:p-6 rounded-3xl border border-polsri-100">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-600 flex items-center justify-center font-bold">
-                <Sparkles className="w-5 h-5 fill-amber-400" />
-              </div>
+          {/* Categories Grid with Stagger Motion */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                  Produk Unggulan PMW Polsri
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <span className="w-2.5 h-6 bg-polsri-600 rounded-full inline-block" />
+                  Kategori Produk Mahasiswa
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500">
-                  Produk terpilih dengan penjualan tertinggi dan ulasan terbaik
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                  Pilih kategori produk karya mahasiswa Politeknik Negeri Sriwijaya
                 </p>
               </div>
+              <Link
+                href="/products"
+                className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group"
+              >
+                <span>Semua Kategori</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
-            <Link
-              href="/products"
-              className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group"
+
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-20px' }}
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4"
             >
-              <span>Lihat Semua</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
+              {categories.map((category) => {
+                const count = products.filter((p) => p.category_id === category.id).length;
+                return (
+                  <motion.div key={category.id} variants={itemVariants}>
+                    <Link
+                      href={`/products?category=${category.slug}`}
+                      onClick={() => setSelectedCategory(category.slug)}
+                      className="group bg-white p-4 rounded-2xl border border-slate-200/80 hover-lift hover:border-polsri-300 hover:shadow-card-hover flex flex-col items-center text-center h-full"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-polsri-50 group-hover:bg-polsri-100/70 transition-all flex items-center justify-center mb-3">
+                        {getCategoryIcon(category.icon)}
+                      </div>
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-polsri-600 transition-colors">
+                        {category.name}
+                      </h3>
+                      <span className="text-[11px] text-slate-400 mt-0.5">{count} Produk</span>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </section>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {featuredProducts.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </section>
-
-        {/* Polsri Entrepreneurship Impact Banner */}
-        <section className="bg-gradient-to-r from-polsri-900 via-polsri-800 to-polsri-950 text-white rounded-3xl p-6 sm:p-10 relative overflow-hidden shadow-xl">
-          <div className="relative z-10 max-w-2xl">
-            <span className="text-xs font-bold text-amber-300 uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full border border-white/20 inline-block mb-3">
-              Misi Kewirausahaan Kampus
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold mb-3 leading-tight">
-              Dari Mahasiswa Polsri, Untuk Kemajuan Ekonomi Sriwijaya
-            </h3>
-            <p className="text-blue-100 text-xs sm:text-sm mb-6 leading-relaxed">
-              Setiap pembelian produk di PMW Polsri Store langsung mendukung pengembangan bakat wirausaha muda, pendanaan riset produk, dan perputaran ekonomi kreatif kampus Politeknik Negeri Sriwijaya.
-            </p>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-blue-400/20 pt-6">
-              <div>
-                <div className="text-2xl font-black text-amber-300">100%</div>
-                <div className="text-xs text-blue-200">Karya Mahasiswa</div>
+          {/* Featured Products Section */}
+          <section className="bg-gradient-to-b from-polsri-50/50 to-transparent p-4 sm:p-6 rounded-3xl border border-polsri-100">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-600 flex items-center justify-center font-bold">
+                  <Sparkles className="w-5 h-5 fill-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                    Produk Unggulan PMW Polsri
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500">
+                    Produk terpilih dengan penjualan tertinggi dan ulasan terbaik
+                  </p>
+                </div>
               </div>
-              <div>
-                <div className="text-2xl font-black text-amber-300">5+</div>
-                <div className="text-xs text-blue-200">Jurusan Berpartisipasi</div>
-              </div>
-              <div className="col-span-2 sm:col-span-1">
-                <div className="text-2xl font-black text-amber-300">Resmi</div>
-                <div className="text-xs text-blue-200">Merchant Midtrans</div>
-              </div>
+              <Link
+                href="/products"
+                className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group"
+              >
+                <span>Lihat Semua</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
-          </div>
 
-          {/* Decorative illustration / badge */}
-          <div className="hidden lg:block absolute -right-10 -bottom-10 w-96 h-96 bg-polsri-600/30 rounded-full blur-3xl pointer-events-none" />
-        </section>
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-20px' }}
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+            >
+              {featuredProducts.slice(0, 4).map((product) => (
+                <motion.div key={product.id} variants={itemVariants}>
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </motion.div>
+          </section>
 
-        {/* All Products Catalog Preview */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-polsri-600" />
-                Rekomendasi Produk Lainnya
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Jelajahi beragam inovasi kreatif dari seluruh civitas akademika Polsri
+          {/* Polsri Entrepreneurship Impact Banner */}
+          <section className="bg-gradient-to-r from-polsri-900 via-polsri-800 to-polsri-950 text-white rounded-3xl p-6 sm:p-10 relative overflow-hidden shadow-xl">
+            <div className="relative z-10 max-w-2xl">
+              <span className="text-xs font-bold text-amber-300 uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full border border-white/20 inline-block mb-3">
+                Misi Kewirausahaan Kampus
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-extrabold mb-3 leading-tight">
+                Dari Mahasiswa Polsri, Untuk Kemajuan Ekonomi Sriwijaya
+              </h3>
+              <p className="text-blue-100 text-xs sm:text-sm mb-6 leading-relaxed">
+                Setiap pembelian produk di PMW Polsri Store langsung mendukung pengembangan bakat wirausaha muda, pendanaan riset produk, dan perputaran ekonomi kreatif kampus Politeknik Negeri Sriwijaya.
               </p>
-            </div>
-            <Link
-              href="/products"
-              className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group"
-            >
-              <span>Buka Katalog Lengkap</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {activeProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </section>
-      </main>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 border-t border-blue-400/20 pt-6">
+                <div>
+                  <div className="text-2xl font-black text-amber-300">100%</div>
+                  <div className="text-xs text-blue-200">Karya Mahasiswa</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-amber-300">5+</div>
+                  <div className="text-xs text-blue-200">Jurusan Berpartisipasi</div>
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <div className="text-2xl font-black text-amber-300">Resmi</div>
+                  <div className="text-xs text-blue-200">Merchant Midtrans</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Decorative illustration / badge */}
+            <div className="hidden lg:block absolute -right-10 -bottom-10 w-96 h-96 bg-polsri-600/30 rounded-full blur-3xl pointer-events-none" />
+          </section>
+
+          {/* All Products Catalog Preview */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-polsri-600" />
+                  Rekomendasi Produk Lainnya
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                  Jelajahi beragam inovasi kreatif dari seluruh civitas akademika Polsri
+                </p>
+              </div>
+              <Link
+                href="/products"
+                className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group"
+              >
+                <span>Buka Katalog Lengkap</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-20px' }}
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+            >
+              {activeProducts.map((product) => (
+                <motion.div key={product.id} variants={itemVariants}>
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </motion.div>
+          </section>
+        </main>
+      </PageTransition>
 
       <Footer />
     </div>

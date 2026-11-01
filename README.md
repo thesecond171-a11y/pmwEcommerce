@@ -188,3 +188,4 @@ Buka browser di: [http://localhost:3000](http://localhost:3000)
 - Seluruh Secret Key (seperti `MIDTRANS_SERVER_KEY` dan `SUPABASE_SERVICE_ROLE_KEY`) hanya berjalan di sisi server (Server Actions / Route Handlers) dan tidak pernah diekspos ke browser pelanggan.
 - Webhook Midtrans diverifikasi menggunakan enkripsi hash `SHA-512` dari order id, status code, gross amount, dan server key.
 - Row Level Security (RLS) memastikan pelanggan hanya dapat membaca dan mengelola data transaksi miliknya sendiri.
+

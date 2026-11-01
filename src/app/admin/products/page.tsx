@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Product } from '@/types';
 import { formatRupiah } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Package,
   Plus,
@@ -144,7 +145,7 @@ export default function AdminProductsPage() {
 
         <button
           onClick={openAddModal}
-          className="px-4 py-2.5 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-polsri-600/30 transition-all self-start sm:self-auto"
+          className="px-4 py-2.5 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-polsri-600/30 transition-all self-start sm:self-auto hover-lift btn-press"
         >
           <Plus className="w-4 h-4" />
           <span>Tambah Produk Baru</span>
@@ -266,7 +267,7 @@ export default function AdminProductsPage() {
                       <td className="p-4 text-center">
                         <button
                           onClick={() => updateProduct(p.id, { is_active: !p.is_active })}
-                          className={`text-[11px] font-bold px-2 py-0.5 rounded-full border transition-all ${
+                          className={`text-[11px] font-bold px-2 py-0.5 rounded-full border transition-all btn-press ${
                             p.is_active
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : 'bg-slate-100 text-slate-500 border-slate-200'
@@ -280,14 +281,14 @@ export default function AdminProductsPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => openEditModal(p)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-polsri-600 hover:bg-polsri-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-polsri-600 hover:bg-polsri-50 transition-colors btn-press"
                             title="Edit Produk"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setDeletingProduct(p)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors btn-press"
                             title="Hapus Produk"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -303,207 +304,223 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Add / Edit Product Modal */}
-      {(isAddModalOpen || editingProduct) && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
-                {editingProduct ? 'Perbarui Data Produk Mahasiswa' : 'Tambah Produk Kewirausahaan Baru'}
-              </h3>
-              <button
-                onClick={() => {
-                  setIsAddModalOpen(false);
-                  setEditingProduct(null);
-                }}
-                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form
-              onSubmit={editingProduct ? handleSaveEdit : handleSaveAdd}
-              className="space-y-4 text-xs"
+      {/* Add / Edit Product Modal with Motion */}
+      <AnimatePresence>
+        {(isAddModalOpen || editingProduct) && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.18 }}
+              className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 space-y-5"
             >
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Judul / Nama Produk *</label>
-                <input
-                  type="text"
-                  required
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Contoh: Pempek Crispy Tenggiri Frozen Pack"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Kategori Produk *</label>
-                  <select
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none bg-white"
-                  >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Harga (Rp) *</label>
-                  <input
-                    type="number"
-                    required
-                    min={1000}
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Stok Awal *</label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={formStock}
-                    onChange={(e) => setFormStock(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Nama Mahasiswa Pembuat *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formStudentName}
-                    onChange={(e) => setFormStudentName(e.target.value)}
-                    placeholder="M. Rizky Pratama"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Jurusan / Prodi Polsri *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formJurusan}
-                    onChange={(e) => setFormJurusan(e.target.value)}
-                    placeholder="D4 Teknik Kimia"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">URL Foto Produk</label>
-                <input
-                  type="url"
-                  required
-                  value={formImageUrl}
-                  onChange={(e) => setFormImageUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Deskripsi Lengkap Produk *</label>
-                <textarea
-                  rows={4}
-                  required
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Jelaskan keunggulan produk inovasi karya mahasiswa..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
-                />
-              </div>
-
-              <div className="flex gap-6 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={formIsFeatured}
-                    onChange={(e) => setFormIsFeatured(e.target.checked)}
-                    className="rounded text-polsri-600 focus:ring-polsri-500"
-                  />
-                  <span>Tandai Sebagai Produk Unggulan</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={formIsActive}
-                    onChange={(e) => setFormIsActive(e.target.checked)}
-                    className="rounded text-polsri-600 focus:ring-polsri-500"
-                  />
-                  <span>Tampilkan di Toko (Aktif)</span>
-                </label>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 flex justify-end gap-2">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
+                  {editingProduct ? 'Perbarui Data Produk Mahasiswa' : 'Tambah Produk Kewirausahaan Baru'}
+                </h3>
                 <button
-                  type="button"
                   onClick={() => {
                     setIsAddModalOpen(false);
                     setEditingProduct(null);
                   }}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50"
+                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form
+                onSubmit={editingProduct ? handleSaveEdit : handleSaveAdd}
+                className="space-y-4 text-xs"
+              >
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Judul / Nama Produk *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
+                    placeholder="Contoh: Pempek Crispy Tenggiri Frozen Pack"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Kategori Produk *</label>
+                    <select
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none bg-white"
+                    >
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Harga (Rp) *</label>
+                    <input
+                      type="number"
+                      required
+                      min={1000}
+                      value={formPrice}
+                      onChange={(e) => setFormPrice(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Stok Awal *</label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={formStock}
+                      onChange={(e) => setFormStock(Number(e.target.value))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Nama Mahasiswa Pembuat *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formStudentName}
+                      onChange={(e) => setFormStudentName(e.target.value)}
+                      placeholder="M. Rizky Pratama"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Jurusan / Prodi Polsri *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formJurusan}
+                      onChange={(e) => setFormJurusan(e.target.value)}
+                      placeholder="D4 Teknik Kimia"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">URL Foto Produk</label>
+                  <input
+                    type="url"
+                    required
+                    value={formImageUrl}
+                    onChange={(e) => setFormImageUrl(e.target.value)}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Deskripsi Lengkap Produk *</label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    placeholder="Jelaskan keunggulan produk inovasi karya mahasiswa..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-6 pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={formIsFeatured}
+                      onChange={(e) => setFormIsFeatured(e.target.checked)}
+                      className="rounded text-polsri-600 focus:ring-polsri-500"
+                    />
+                    <span>Tandai Sebagai Produk Unggulan</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={formIsActive}
+                      onChange={(e) => setFormIsActive(e.target.checked)}
+                      className="rounded text-polsri-600 focus:ring-polsri-500"
+                    />
+                    <span>Tampilkan di Toko (Aktif)</span>
+                  </label>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddModalOpen(false);
+                      setEditingProduct(null);
+                    }}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 btn-press"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-polsri-600 hover:bg-polsri-700 text-white font-bold shadow-md shadow-polsri-600/30 hover-lift btn-press"
+                  >
+                    {editingProduct ? 'Simpan Perubahan' : 'Tambahkan Produk'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal with Motion */}
+      <AnimatePresence>
+        {deletingProduct && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.18 }}
+              className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl border border-slate-200"
+            >
+              <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-slate-900">Hapus Produk Ini?</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Apakah Anda yakin ingin menghapus <strong>&ldquo;{deletingProduct.title}&rdquo;</strong> dari katalog?
+                </p>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setDeletingProduct(null)}
+                  className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 btn-press"
                 >
                   Batal
                 </button>
                 <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-polsri-600 hover:bg-polsri-700 text-white font-bold shadow-md shadow-polsri-600/30"
+                  onClick={handleDelete}
+                  className="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/30 btn-press"
                 >
-                  {editingProduct ? 'Simpan Perubahan' : 'Tambahkan Produk'}
+                  Hapus
                 </button>
               </div>
-            </form>
+            </motion.div>
           </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deletingProduct && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center">
-              <AlertCircle className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="font-bold text-base text-slate-900">Hapus Produk Ini?</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Apakah Anda yakin ingin menghapus <strong>&ldquo;{deletingProduct.title}&rdquo;</strong> dari katalog?
-              </p>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => setDeletingProduct(null)}
-                className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleDelete}
-                className="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/30"
-              >
-                Hapus
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

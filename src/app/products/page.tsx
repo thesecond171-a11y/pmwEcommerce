@@ -5,7 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import Navbar from '@/components/navbar';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/product-card';
+import PageTransition from '@/components/page-transition';
 import { useApp } from '@/context/AppContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   Filter,
@@ -157,7 +159,7 @@ function ProductsCatalog() {
           {/* Mobile Filter Toggle */}
           <button
             onClick={() => setIsMobileFilterOpen(true)}
-            className="md:hidden flex items-center justify-center gap-2 px-4 py-2.5 bg-polsri-50 text-polsri-700 rounded-xl border border-polsri-200 text-sm font-semibold flex-1"
+            className="md:hidden flex items-center justify-center gap-2 px-4 py-2.5 bg-polsri-50 text-polsri-700 rounded-xl border border-polsri-200 text-sm font-semibold flex-1 btn-press"
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filter</span>
@@ -193,7 +195,7 @@ function ProductsCatalog() {
             </h3>
             <button
               onClick={resetFilters}
-              className="text-xs text-polsri-600 hover:text-polsri-700 font-semibold flex items-center gap-1"
+              className="text-xs text-polsri-600 hover:text-polsri-700 font-semibold flex items-center gap-1 btn-press"
             >
               <RotateCcw className="w-3 h-3" />
               Reset
@@ -294,7 +296,7 @@ function ProductsCatalog() {
             {(activeCategory !== 'all' || selectedJurusan !== 'all' || searchTerm) && (
               <button
                 onClick={resetFilters}
-                className="text-xs text-rose-600 hover:underline flex items-center gap-1"
+                className="text-xs text-rose-600 hover:underline flex items-center gap-1 btn-press"
               >
                 <X className="w-3.5 h-3.5" /> Hapus Semua Filter
               </button>
@@ -315,7 +317,7 @@ function ProductsCatalog() {
               </p>
               <button
                 onClick={resetFilters}
-                className="px-5 py-2.5 bg-polsri-600 text-white rounded-xl text-xs font-semibold hover:bg-polsri-700 transition-colors shadow-sm"
+                className="px-5 py-2.5 bg-polsri-600 text-white rounded-xl text-xs font-semibold hover:bg-polsri-700 transition-colors shadow-sm btn-press"
               >
                 Tampilkan Semua Produk
               </button>
@@ -323,96 +325,106 @@ function ProductsCatalog() {
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <div key={product.id}>
+                  <ProductCard product={product} />
+                </div>
               ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Mobile Filter Drawer */}
-      {isMobileFilterOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end">
-          <div className="w-80 max-w-full bg-white h-full p-6 overflow-y-auto space-y-6 animate-in slide-in-from-right duration-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-              <h3 className="font-bold text-base text-slate-900">Filter Produk</h3>
-              <button
-                onClick={() => setIsMobileFilterOpen(false)}
-                className="p-1 rounded-lg hover:bg-slate-100"
-              >
-                <X className="w-5 h-5 text-slate-600" />
-              </button>
-            </div>
-
-            {/* Category */}
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                Kategori
-              </h4>
-              <div className="space-y-1">
+      {/* Mobile Filter Drawer with Motion AnimatePresence */}
+      <AnimatePresence>
+        {isMobileFilterOpen && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex justify-end">
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="w-80 max-w-full bg-white h-full p-6 overflow-y-auto space-y-6"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+                <h3 className="font-bold text-base text-slate-900">Filter Produk</h3>
                 <button
-                  onClick={() => setActiveCategory('all')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
-                    activeCategory === 'all'
-                      ? 'bg-polsri-600 text-white'
-                      : 'text-slate-600 bg-slate-50'
-                  }`}
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="p-1 rounded-lg hover:bg-slate-100"
                 >
-                  Semua Kategori
+                  <X className="w-5 h-5 text-slate-600" />
                 </button>
-                {categories.map((cat) => (
+              </div>
+
+              {/* Category */}
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
+                  Kategori
+                </h4>
+                <div className="space-y-1">
                   <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.slug)}
+                    onClick={() => setActiveCategory('all')}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
-                      activeCategory === cat.slug
+                      activeCategory === 'all'
                         ? 'bg-polsri-600 text-white'
                         : 'text-slate-600 bg-slate-50'
                     }`}
                   >
-                    {cat.name}
+                    Semua Kategori
                   </button>
-                ))}
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCategory(cat.slug)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
+                        activeCategory === cat.slug
+                          ? 'bg-polsri-600 text-white'
+                          : 'text-slate-600 bg-slate-50'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Jurusan */}
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                Jurusan Pembuat
-              </h4>
-              <select
-                value={selectedJurusan}
-                onChange={(e) => setSelectedJurusan(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-700 p-2.5 rounded-xl text-xs"
-              >
-                <option value="all">Semua Jurusan</option>
-                {uniqueJurusan.map((j) => (
-                  <option key={j} value={j}>
-                    {j}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {/* Jurusan */}
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
+                  Jurusan Pembuat
+                </h4>
+                <select
+                  value={selectedJurusan}
+                  onChange={(e) => setSelectedJurusan(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-700 p-2.5 rounded-xl text-xs"
+                >
+                  <option value="all">Semua Jurusan</option>
+                  {uniqueJurusan.map((j) => (
+                    <option key={j} value={j}>
+                      {j}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Apply Button */}
-            <div className="pt-6 border-t border-slate-200 flex gap-2">
-              <button
-                onClick={resetFilters}
-                className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600"
-              >
-                Reset
-              </button>
-              <button
-                onClick={() => setIsMobileFilterOpen(false)}
-                className="w-1/2 py-2.5 rounded-xl bg-polsri-600 text-white text-xs font-bold"
-              >
-                Terapkan
-              </button>
-            </div>
+              {/* Apply Button */}
+              <div className="pt-6 border-t border-slate-200 flex gap-2">
+                <button
+                  onClick={resetFilters}
+                  className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 btn-press"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="w-1/2 py-2.5 rounded-xl bg-polsri-600 text-white text-xs font-bold btn-press"
+                >
+                  Terapkan
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -421,9 +433,11 @@ export default function ProductsPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <Suspense fallback={<div className="p-12 text-center text-xs text-slate-400">Memuat katalog...</div>}>
-        <ProductsCatalog />
-      </Suspense>
+      <PageTransition>
+        <Suspense fallback={<div className="p-12 text-center text-xs text-slate-400">Memuat katalog...</div>}>
+          <ProductsCatalog />
+        </Suspense>
+      </PageTransition>
       <Footer />
     </div>
   );

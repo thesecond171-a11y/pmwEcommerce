@@ -22,3 +22,4 @@ export const isSupabaseConfigured = () => {
     !url.includes('your-project-id')
   );
 };
+

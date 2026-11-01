@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Sparkles, ArrowRight, ShieldCheck, ShoppingBag } from 'lucide-react';
 
 interface Slide {
@@ -58,7 +59,7 @@ export default function BannerSlider() {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
-    }, 6000);
+    }, 6500);
     return () => clearInterval(timer);
   }, []);
 
@@ -74,53 +75,62 @@ export default function BannerSlider() {
 
   return (
     <div className="relative rounded-3xl overflow-hidden shadow-xl border border-slate-200/50">
-      <div className={`relative min-h-[380px] sm:min-h-[440px] bg-gradient-to-r ${activeSlide.bgGradient} transition-all duration-700 flex items-center`}>
+      <div className={`relative min-h-[380px] sm:min-h-[440px] bg-gradient-to-r ${activeSlide.bgGradient} transition-colors duration-500 flex items-center`}>
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img
             src={activeSlide.image}
             alt={activeSlide.title}
-            className="w-full h-full object-cover opacity-20 mix-blend-overlay scale-105"
+            className="w-full h-full object-cover opacity-20 mix-blend-overlay"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-polsri-950 via-polsri-900/90 to-transparent" />
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-12 py-12 flex flex-col justify-center max-w-3xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 w-fit shadow-sm bg-white/10 text-white backdrop-blur-md border border-white/20">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>{activeSlide.tag}</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4 drop-shadow-sm">
-            {activeSlide.title}
-          </h1>
-
-          <p className="text-sm sm:text-base text-blue-100/90 max-w-xl mb-8 leading-relaxed">
-            {activeSlide.subtitle}
-          </p>
-
-          <div className="flex flex-wrap items-center gap-4">
-            <Link
-              href={activeSlide.ctaLink}
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm shadow-lg shadow-amber-400/20 hover:scale-105 transition-all"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              <span>{activeSlide.ctaText}</span>
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Link>
-
-            <div className="hidden sm:flex items-center gap-2 text-xs text-blue-200 bg-white/5 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/10">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Verifikasi Resmi Merchant PMW Polsri</span>
+        {/* Content with subtle Motion fade & slide */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeSlide.id}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="relative z-10 max-w-7xl mx-auto px-6 sm:px-12 py-12 flex flex-col justify-center max-w-3xl"
+          >
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 w-fit shadow-sm bg-white/10 text-white backdrop-blur-md border border-white/20">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>{activeSlide.tag}</span>
             </div>
-          </div>
-        </div>
+
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4 drop-shadow-sm">
+              {activeSlide.title}
+            </h1>
+
+            <p className="text-sm sm:text-base text-blue-100/90 max-w-xl mb-8 leading-relaxed">
+              {activeSlide.subtitle}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href={activeSlide.ctaLink}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm shadow-lg shadow-amber-400/20 hover-lift btn-press"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>{activeSlide.ctaText}</span>
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Link>
+
+              <div className="hidden sm:flex items-center gap-2 text-xs text-blue-200 bg-white/5 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/10">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Verifikasi Resmi Merchant PMW Polsri</span>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
 
         {/* Navigation Arrows */}
         <button
           onClick={prevSlide}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm flex items-center justify-center transition-all z-20 border border-white/20"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm flex items-center justify-center transition-all z-20 border border-white/20 btn-press"
           aria-label="Previous slide"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -128,7 +138,7 @@ export default function BannerSlider() {
 
         <button
           onClick={nextSlide}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm flex items-center justify-center transition-all z-20 border border-white/20"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm flex items-center justify-center transition-all z-20 border border-white/20 btn-press"
           aria-label="Next slide"
         >
           <ChevronRight className="w-5 h-5" />
