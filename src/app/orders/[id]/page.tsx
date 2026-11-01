@@ -269,32 +269,40 @@ function OrderDetailContent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {order.items?.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/50">
-                    <td className="p-3.5">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={
-                            item.product_image ||
-                            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=80'
-                          }
-                          alt=""
-                          className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0"
-                        />
-                        <span className="font-semibold text-slate-800">{item.product_title}</span>
-                      </div>
-                    </td>
-                    <td className="p-3.5 text-center font-semibold text-slate-700">
-                      {item.quantity}
-                    </td>
-                    <td className="p-3.5 text-right text-slate-600">
-                      {formatRupiah(item.price)}
-                    </td>
-                    <td className="p-3.5 text-right font-bold text-slate-900">
-                      {formatRupiah(item.subtotal)}
+                {order.items && order.items.length > 0 ? (
+                  order.items.map((item, idx) => (
+                    <tr key={item.id || `order-item-${idx}`} className="hover:bg-slate-50/50">
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={
+                              item.product_image ||
+                              'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=80'
+                            }
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0"
+                          />
+                          <span className="font-semibold text-slate-800">{item.product_title || 'Produk Polsri'}</span>
+                        </div>
+                      </td>
+                      <td className="p-3.5 text-center font-semibold text-slate-700">
+                        {item.quantity || 1}
+                      </td>
+                      <td className="p-3.5 text-right text-slate-600">
+                        {formatRupiah(item.price || 0)}
+                      </td>
+                      <td className="p-3.5 text-right font-bold text-slate-900">
+                        {formatRupiah(item.subtotal || ((item.price || 0) * (item.quantity || 1)))}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="p-4 text-center text-slate-400 italic">
+                      Detail produk pesanan ini tidak tersedia.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

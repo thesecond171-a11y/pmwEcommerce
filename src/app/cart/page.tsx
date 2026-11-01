@@ -23,6 +23,8 @@ export default function CartPage() {
   const router = useRouter();
   const { cart, updateCartQuantity, removeFromCart, clearCart, cartTotal, cartCount } = useApp();
 
+  const validCart = cart.filter((item) => item && item.product && item.product.id);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -48,7 +50,7 @@ export default function CartPage() {
               </p>
             </div>
 
-            {cart.length > 0 && (
+            {validCart.length > 0 && (
               <button
                 onClick={clearCart}
                 className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline flex items-center gap-1 btn-press"
@@ -59,7 +61,7 @@ export default function CartPage() {
             )}
           </div>
 
-          {cart.length === 0 ? (
+          {validCart.length === 0 ? (
             /* Empty Cart State */
             <div className="bg-white rounded-3xl border border-slate-200/90 p-12 sm:p-16 text-center max-w-2xl mx-auto shadow-sm my-8">
               <div className="w-20 h-20 rounded-full bg-blue-50 text-polsri-600 mx-auto flex items-center justify-center mb-5">
@@ -84,13 +86,13 @@ export default function CartPage() {
               <div className="lg:col-span-8 space-y-4">
                 <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden divide-y divide-slate-100">
                   <AnimatePresence>
-                    {cart.map((item) => {
+                    {validCart.map((item) => {
                       const imageSrc =
-                        item.product.images && item.product.images.length > 0
+                        item.product?.images && item.product.images.length > 0
                           ? item.product.images[0]
                           : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=80';
 
-                      const isStockInsufficient = item.quantity > item.product.stock;
+                      const isStockInsufficient = item.quantity > (item.product?.stock ?? 0);
 
                       return (
                         <motion.div
@@ -107,7 +109,7 @@ export default function CartPage() {
                             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
                               <img
                                 src={imageSrc}
-                                alt={item.product.title}
+                                alt={item.product?.title || 'Produk'}
                                 className="w-full h-full object-cover"
                               />
                             </div>
@@ -116,21 +118,21 @@ export default function CartPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5 text-[11px] text-polsri-700 font-semibold mb-1">
                                 <UserCheck className="w-3 h-3 text-polsri-600" />
-                                <span className="truncate">{item.product.jurusan}</span>
+                                <span className="truncate">{item.product?.jurusan || 'Mahasiswa Polsri'}</span>
                               </div>
                               <Link
-                                href={`/products/${item.product.id}`}
+                                href={`/products/${item.product?.id}`}
                                 className="text-sm font-bold text-slate-800 hover:text-polsri-600 line-clamp-1 transition-colors"
                               >
-                                {item.product.title}
+                                {item.product?.title || 'Produk Polsri'}
                               </Link>
                               <div className="text-xs text-slate-500 mt-0.5">
-                                Harga Satuan: {formatRupiah(item.product.price)}
+                                Harga Satuan: {formatRupiah(item.product?.price || 0)}
                               </div>
                               {isStockInsufficient && (
                                 <div className="flex items-center gap-1 text-[11px] text-red-600 font-semibold mt-1">
                                   <AlertTriangle className="w-3 h-3" />
-                                  Stok tersisa hanya {item.product.stock} pcs
+                                  Stok tersisa hanya {item.product?.stock ?? 0} pcs
                                 </div>
                               )}
                             </div>
@@ -151,7 +153,7 @@ export default function CartPage() {
                               </span>
                               <button
                                 onClick={() => updateCartQuantity(item.product_id, item.quantity + 1)}
-                                disabled={item.quantity >= item.product.stock}
+                                disabled={item.quantity >= (item.product?.stock ?? 0)}
                                 className="px-3 py-1 text-slate-700 hover:bg-slate-200 text-xs font-bold disabled:opacity-40 btn-press"
                               >
                                 +
@@ -161,7 +163,7 @@ export default function CartPage() {
                             {/* Subtotal */}
                             <div className="text-right">
                               <div className="text-sm font-bold text-polsri-700">
-                                {formatRupiah(item.product.price * item.quantity)}
+                                {formatRupiah((item.product?.price || 0) * item.quantity)}
                               </div>
                             </div>
 

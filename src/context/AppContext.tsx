@@ -74,10 +74,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (savedCategories) setCategories(JSON.parse(savedCategories));
 
       const savedCart = localStorage.getItem('pmw_cart');
-      if (savedCart) setCart(JSON.parse(savedCart));
+      if (savedCart) {
+        try {
+          const parsed = JSON.parse(savedCart);
+          if (Array.isArray(parsed)) {
+            const valid = parsed.filter((item: any) => item && item.product && item.product.id && typeof item.product.price === 'number');
+            setCart(valid);
+          }
+        } catch {
+          setCart([]);
+        }
+      }
 
       const savedOrders = localStorage.getItem('pmw_orders');
-      if (savedOrders) setOrders(JSON.parse(savedOrders));
+      if (savedOrders) {
+        try {
+          const parsed = JSON.parse(savedOrders);
+          if (Array.isArray(parsed)) {
+            const valid = parsed.filter((o: any) => o && o.id && Array.isArray(o.items));
+            setOrders(valid.length > 0 ? valid : mockOrders);
+          }
+        } catch {
+          setOrders(mockOrders);
+        }
+      }
     } catch (e) {
       console.warn('LocalStorage error:', e);
     }
@@ -237,7 +257,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) =>
       prev.map((item) => {
         if (item.product_id === productId) {
-          const maxStock = item.product.stock;
+          const maxStock = item.product?.stock ?? 99;
           return { ...item, quantity: Math.min(quantity, maxStock) };
         }
         return item;
@@ -249,8 +269,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCart([]);
   };
 
-  const cartTotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const cartTotal = cart.reduce((acc, item) => acc + (item?.product?.price || 0) * (item?.quantity || 0), 0);
+  const cartCount = cart.reduce((acc, item) => acc + (item?.quantity || 0), 0);
 
   // Orders operations
   const createOrder = (orderData: Omit<Order, 'id' | 'order_number' | 'created_at'>): Order => {

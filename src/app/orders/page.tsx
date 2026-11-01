@@ -179,31 +179,37 @@ export default function CustomerOrdersPage() {
 
                       {/* Order Items */}
                       <div className="space-y-3">
-                        {order.items?.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between gap-3 text-xs">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <img
-                                src={
-                                  item.product_image ||
-                                  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=80'
-                                }
-                                alt={item.product_title}
-                                className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <h4 className="font-semibold text-slate-800 truncate">
-                                  {item.product_title}
-                                </h4>
-                                <p className="text-slate-400 mt-0.5">
-                                  {item.quantity} barang x {formatRupiah(item.price)}
-                                </p>
+                        {order.items && order.items.length > 0 ? (
+                          order.items.map((item, idx) => (
+                            <div key={item.id || `item-${idx}`} className="flex items-center justify-between gap-3 text-xs">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <img
+                                  src={
+                                    item.product_image ||
+                                    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=80'
+                                  }
+                                  alt={item.product_title || 'Produk'}
+                                  className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0"
+                                />
+                                <div className="min-w-0">
+                                  <h4 className="font-semibold text-slate-800 truncate">
+                                    {item.product_title || 'Produk Polsri'}
+                                  </h4>
+                                  <p className="text-slate-400 mt-0.5">
+                                    {item.quantity || 1} barang x {formatRupiah(item.price || 0)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="font-bold text-slate-800 whitespace-nowrap">
+                                {formatRupiah(item.subtotal || ((item.price || 0) * (item.quantity || 1)))}
                               </div>
                             </div>
-                            <div className="font-bold text-slate-800 whitespace-nowrap">
-                              {formatRupiah(item.subtotal)}
-                            </div>
+                          ))
+                        ) : (
+                          <div className="text-xs text-slate-400 italic py-1">
+                            Detail rincian produk tidak tersedia.
                           </div>
-                        ))}
+                        )}
                       </div>
 
                       {/* Tracking info if shipped */}

@@ -72,6 +72,7 @@ const shippingOptions: ShippingOption[] = [
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, cartTotal, user, createOrder } = useApp();
+  const validCart = cart.filter((item) => item && item.product && item.product.id);
 
   const [customerName, setCustomerName] = useState(user?.full_name || 'Alif Akbar Ramadhan');
   const [customerEmail, setCustomerEmail] = useState(user?.email || 'alif.akbar@student.polsri.ac.id');
@@ -134,11 +135,11 @@ export default function CheckoutPage() {
               postal_code: shippingPostalCode,
             },
           },
-          itemDetails: cart.map((item) => ({
+          itemDetails: validCart.map((item) => ({
             id: item.product_id,
-            price: item.product.price,
+            price: item.product?.price || 0,
             quantity: item.quantity,
-            name: item.product.title,
+            name: item.product?.title || 'Produk Polsri',
           })),
         }),
       });
@@ -165,15 +166,15 @@ export default function CheckoutPage() {
               payment_method: result.payment_type || 'Midtrans Snap',
               snap_token: data.token,
               notes,
-              items: cart.map((item) => ({
+              items: validCart.map((item) => ({
                 id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
                 order_id: '',
                 product_id: item.product_id,
-                product_title: item.product.title,
-                product_image: item.product.images?.[0],
-                price: item.product.price,
+                product_title: item.product?.title || 'Produk Polsri',
+                product_image: item.product?.images?.[0],
+                price: item.product?.price || 0,
                 quantity: item.quantity,
-                subtotal: item.product.price * item.quantity,
+                subtotal: (item.product?.price || 0) * item.quantity,
               })),
             });
 
@@ -197,15 +198,15 @@ export default function CheckoutPage() {
               payment_method: result.payment_type || 'Midtrans Snap',
               snap_token: data.token,
               notes,
-              items: cart.map((item) => ({
+              items: validCart.map((item) => ({
                 id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
                 order_id: '',
                 product_id: item.product_id,
-                product_title: item.product.title,
-                product_image: item.product.images?.[0],
-                price: item.product.price,
+                product_title: item.product?.title || 'Produk Polsri',
+                product_image: item.product?.images?.[0],
+                price: item.product?.price || 0,
                 quantity: item.quantity,
-                subtotal: item.product.price * item.quantity,
+                subtotal: (item.product?.price || 0) * item.quantity,
               })),
             });
 
@@ -481,29 +482,29 @@ export default function CheckoutPage() {
             <div className="lg:col-span-5 sticky top-24 space-y-4">
               <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm space-y-5">
                 <h3 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100">
-                  Ringkasan Pesanan ({cart.length} Jenis Produk)
+                  Ringkasan Pesanan ({validCart.length} Jenis Produk)
                 </h3>
 
                 {/* Item Previews */}
                 <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                  {cart.map((item) => (
+                  {validCart.map((item) => (
                     <div key={item.id} className="flex items-center gap-3 text-xs">
                       <img
                         src={
-                          item.product.images?.[0] ||
+                          item.product?.images?.[0] ||
                           'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=80'
                         }
-                        alt={item.product.title}
+                        alt={item.product?.title || 'Produk'}
                         className="w-12 h-12 rounded-lg object-cover border border-slate-200 shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-800 truncate">{item.product.title}</p>
+                        <p className="font-semibold text-slate-800 truncate">{item.product?.title || 'Produk Polsri'}</p>
                         <p className="text-slate-400">
-                          {item.quantity} x {formatRupiah(item.product.price)}
+                          {item.quantity} x {formatRupiah(item.product?.price || 0)}
                         </p>
                       </div>
                       <div className="font-bold text-slate-900 whitespace-nowrap">
-                        {formatRupiah(item.product.price * item.quantity)}
+                        {formatRupiah((item.product?.price || 0) * item.quantity)}
                       </div>
                     </div>
                   ))}
