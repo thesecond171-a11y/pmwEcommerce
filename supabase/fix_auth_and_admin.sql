@@ -110,3 +110,4 @@ BEGIN
         WHERE email = 'admin@gmail.com';
     END IF;
 END $$;
+

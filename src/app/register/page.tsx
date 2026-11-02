@@ -25,44 +25,43 @@ export default function RegisterPage() {
     setLoading(true);
     setErrorMessage('');
 
-    if (isSupabaseConfigured() && password.length >= 6) {
-      try {
-        const { user: liveUser, error } = await signUpWithSupabase(email, password, fullName, phone, 'customer');
-        if (error) {
-          // If error is database trigger error, log warning and fallback to local profile registration
-          if (error.includes('Database error') || error.includes('saving new user')) {
-            console.warn('[Supabase Auth] Trigger pending fix, proceeding with customer profile registration:', error);
-          } else {
-            setErrorMessage(error);
-            setLoading(false);
-            return;
-          }
-        }
-        if (liveUser) {
-          setUser(liveUser);
-          setLoading(false);
-          router.push('/');
-          return;
-        }
-      } catch (err) {
-        console.warn('Supabase register fallback:', err);
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, fullName, phone }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok && !data.alreadyRegistered) {
+        setErrorMessage(data.error || 'Pendaftaran gagal');
+        setLoading(false);
+        return;
       }
+
+      if (data.user) {
+        setUser(data.user);
+        setLoading(false);
+        router.push('/');
+        return;
+      }
+    } catch (err: any) {
+      console.warn('API register fallback:', err);
     }
 
-    // Fallback registration
-    setTimeout(() => {
-      setUser({
-        id: `user-cust-${Date.now()}`,
-        full_name: fullName,
-        email,
-        phone,
-        role: 'customer',
-        city: 'Palembang',
-        address: 'Politeknik Negeri Sriwijaya, Bukit Besar',
-      });
-      setLoading(false);
-      router.push('/');
-    }, 400);
+    // Local fallback
+    setUser({
+      id: `user-cust-${Date.now()}`,
+      full_name: fullName,
+      email,
+      phone,
+      role: 'customer',
+      city: 'Palembang',
+      address: 'Politeknik Negeri Sriwijaya, Bukit Besar',
+    });
+    setLoading(false);
+    router.push('/');
   };
 
   return (

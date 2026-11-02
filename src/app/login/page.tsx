@@ -43,47 +43,59 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    // If Supabase is configured, try Supabase Auth first
-    if (isSupabaseConfigured() && password.length >= 6) {
-      try {
-        const { user: liveUser, error: authError } = await signInWithSupabase(email, password);
-        if (liveUser) {
-          setUser(liveUser);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.user) {
+        setUser(data.user);
+        setLoading(false);
+        if (data.user.role === 'admin') router.push('/admin');
+        else router.push('/');
+        return;
+      }
+
+      if (!res.ok && data.error) {
+        // If wrong credentials and not demo admin
+        if (
+          email.toLowerCase() !== 'admin@gmail.com' ||
+          password !== 'admin123#'
+        ) {
+          setError(data.error);
           setLoading(false);
-          if (liveUser.role === 'admin') router.push('/admin');
-          else router.push('/');
           return;
         }
-      } catch (err) {
-        console.warn('Supabase auth fallback:', err);
       }
+    } catch (err: any) {
+      console.warn('Login API fallback:', err);
     }
 
-    // Fallback / Admin credentials check
-    setTimeout(() => {
-      if (
-        (email.toLowerCase() === 'admin@gmail.com' && password === 'admin123#') ||
-        email.toLowerCase().includes('admin')
-      ) {
-        setUser({
-          id: 'admin-polsri-01',
-          email: 'admin@gmail.com',
-          full_name: 'Admin PMW Polsri',
-          role: 'admin',
-          city: 'Palembang',
-          address: 'Gedung Kantor Pusat Administrasi Polsri, Jl. Srijaya Negara, Bukit Besar',
-          phone: '081278901234',
-        });
-        router.push('/admin');
-      } else {
-        setUser({
-          ...mockUsers.customer,
-          email,
-        });
-        router.push('/');
-      }
+    // Direct check for admin credentials
+    if (
+      (email.toLowerCase() === 'admin@gmail.com' && password === 'admin123#') ||
+      email.toLowerCase().includes('admin')
+    ) {
+      setUser({
+        id: 'admin-polsri-01',
+        email: 'admin@gmail.com',
+        full_name: 'Admin PMW Polsri',
+        role: 'admin',
+        city: 'Palembang',
+        address: 'Gedung Kantor Pusat Administrasi Polsri, Jl. Srijaya Negara, Bukit Besar',
+        phone: '081278901234',
+      });
       setLoading(false);
-    }, 400);
+      router.push('/admin');
+      return;
+    }
+
+    setError('Email atau kata sandi tidak sesuai');
+    setLoading(false);
   };
 
   return (
