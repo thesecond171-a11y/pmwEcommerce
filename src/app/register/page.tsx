@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PageTransition from '@/components/page-transition';
 import { useApp } from '@/context/AppContext';
+import { signUpWithSupabase } from '@/lib/services/auth';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { GraduationCap, Mail, Lock, User, Phone, ArrowRight } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -16,11 +18,33 @@ export default function RegisterPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage('');
 
+    if (isSupabaseConfigured() && password.length >= 6) {
+      try {
+        const { user: liveUser, error } = await signUpWithSupabase(email, password, fullName, phone, 'customer');
+        if (error) {
+          setErrorMessage(error);
+          setLoading(false);
+          return;
+        }
+        if (liveUser) {
+          setUser(liveUser);
+          setLoading(false);
+          router.push('/');
+          return;
+        }
+      } catch (err) {
+        console.warn('Supabase register fallback:', err);
+      }
+    }
+
+    // Fallback registration
     setTimeout(() => {
       setUser({
         id: `user-cust-${Date.now()}`,
@@ -33,7 +57,7 @@ export default function RegisterPage() {
       });
       setLoading(false);
       router.push('/');
-    }, 600);
+    }, 400);
   };
 
   return (

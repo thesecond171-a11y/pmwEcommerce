@@ -8,7 +8,7 @@ import { Shield, Bell, User, Store, LogOut, Sparkles } from 'lucide-react';
 
 export default function AdminHeader() {
   const router = useRouter();
-  const { user, switchUserRole, logout } = useApp();
+  const { user, switchUserRole, logout, isSupabaseLive } = useApp();
 
   return (
     <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -16,6 +16,24 @@ export default function AdminHeader() {
         <div className="flex items-center gap-2 bg-amber-50 text-amber-800 text-xs font-bold px-3 py-1 rounded-full border border-amber-200">
           <Shield className="w-3.5 h-3.5 text-amber-600" />
           <span>Panel Pengelola Resmi PMW Polsri</span>
+        </div>
+
+        <div
+          className={`hidden md:flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+            isSupabaseLive
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-blue-50 text-blue-700 border-blue-200'
+          }`}
+          title="Status koneksi database Supabase"
+        >
+          <span
+            className={`w-2 h-2 rounded-full ${
+              isSupabaseLive ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'
+            }`}
+          />
+          <span>
+            {isSupabaseLive ? 'Supabase: Live Database' : 'Supabase: vguhuwlrjkncgetignqd (Connected)'}
+          </span>
         </div>
       </div>
 

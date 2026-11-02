@@ -5,6 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { Product } from '@/types';
 import { formatRupiah } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { uploadProductImageToSupabase } from '@/lib/services/products';
 import {
   Package,
   Plus,
@@ -17,7 +18,8 @@ import {
   ExternalLink,
   GraduationCap,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Upload
 } from 'lucide-react';
 
 export default function AdminProductsPage() {
@@ -43,6 +45,7 @@ export default function AdminProductsPage() {
   const [formImageUrl, setFormImageUrl] = useState('');
   const [formIsFeatured, setFormIsFeatured] = useState(false);
   const [formIsActive, setFormIsActive] = useState(true);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const openAddModal = () => {
     setFormTitle('');
@@ -414,15 +417,48 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">URL Foto Produk</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-semibold text-slate-700 text-xs sm:text-sm">Foto Produk *</label>
+                    <label className="text-[11px] font-semibold text-polsri-600 hover:text-polsri-700 cursor-pointer flex items-center gap-1">
+                      <Upload className="w-3.5 h-3.5" />
+                      {isUploadingImage ? 'Mengupload ke Supabase...' : 'Upload dari Perangkat'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isUploadingImage}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setIsUploadingImage(true);
+                          try {
+                            const url = await uploadProductImageToSupabase(file);
+                            if (url) setFormImageUrl(url);
+                          } finally {
+                            setIsUploadingImage(false);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
                   <input
                     type="url"
                     required
                     value={formImageUrl}
                     onChange={(e) => setFormImageUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
+                    placeholder="https://... atau klik 'Upload dari Perangkat' di atas"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
                   />
+                  {formImageUrl && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <img
+                        src={formImageUrl}
+                        alt="Preview"
+                        className="w-12 h-12 rounded-lg object-cover border border-slate-200 shrink-0"
+                      />
+                      <span className="text-[11px] text-slate-400 truncate max-w-sm">{formImageUrl}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>

@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import PageTransition from '@/components/page-transition';
 import { useApp } from '@/context/AppContext';
 import { mockUsers } from '@/lib/mock-data';
+import { signInWithSupabase } from '@/lib/services/auth';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
 import {
   GraduationCap,
   Shield,
@@ -36,11 +38,28 @@ export default function LoginPage() {
     }
   };
 
-  const handleFormLogin = (e: React.FormEvent) => {
+  const handleFormLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    // If Supabase is configured, try Supabase Auth first
+    if (isSupabaseConfigured() && password.length >= 6) {
+      try {
+        const { user: liveUser, error: authError } = await signInWithSupabase(email, password);
+        if (liveUser) {
+          setUser(liveUser);
+          setLoading(false);
+          if (liveUser.role === 'admin') router.push('/admin');
+          else router.push('/');
+          return;
+        }
+      } catch (err) {
+        console.warn('Supabase auth fallback:', err);
+      }
+    }
+
+    // Fallback / Demo login
     setTimeout(() => {
       if (email.toLowerCase().includes('admin')) {
         setUser({
@@ -56,7 +75,7 @@ export default function LoginPage() {
         router.push('/');
       }
       setLoading(false);
-    }, 600);
+    }, 400);
   };
 
   return (

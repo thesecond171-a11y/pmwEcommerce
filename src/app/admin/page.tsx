@@ -16,11 +16,14 @@ import {
   Clock,
   CheckCircle2,
   Truck,
-  CreditCard
+  CreditCard,
+  Database,
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const { products, orders, categories } = useApp();
+  const { products, orders, categories, isSupabaseLive, refreshData, isLoadingData } = useApp();
 
   // Metrics
   const totalRevenue = orders
@@ -53,6 +56,70 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3.5 py-1.5 rounded-xl text-xs font-bold">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
           <span>Rekening Merchant: PMW POLSRI (Aktif)</span>
+        </div>
+      </div>
+
+      {/* Supabase Status Banner */}
+      <div
+        className={`p-4 rounded-2xl border text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs ${
+          isSupabaseLive
+            ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+            : 'bg-blue-50/70 border-blue-200 text-blue-900'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+              isSupabaseLive ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-polsri-700'
+            }`}
+          >
+            <Database className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm">
+                {isSupabaseLive
+                  ? 'Database Supabase Terhubung & Live'
+                  : 'Database Supabase: Siap Digunakan'}
+              </span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  isSupabaseLive
+                    ? 'bg-emerald-200/80 text-emerald-800'
+                    : 'bg-blue-200/80 text-blue-800'
+                }`}
+              >
+                Project: vguhuwlrjkncgetignqd
+              </span>
+            </div>
+            <p className="text-slate-600 mt-0.5">
+              {isSupabaseLive
+                ? 'Seluruh data Produk, Kategori, Pesanan, dan Storage berjalan langsung di database Supabase.'
+                : 'Jalankan file supabase/schema.sql di SQL Editor Supabase untuk mengaktifkan sinkronisasi tabel live.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => refreshData()}
+            disabled={isLoadingData}
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 shadow-xs disabled:opacity-50 btn-press"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingData ? 'animate-spin' : ''}`} />
+            <span>{isLoadingData ? 'Menyinkronkan...' : 'Cek Status Live'}</span>
+          </button>
+          {!isSupabaseLive && (
+            <a
+              href="https://supabase.com/dashboard/project/vguhuwlrjkncgetignqd/sql/new"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-lg bg-polsri-600 font-semibold text-white hover:bg-polsri-700 flex items-center gap-1.5 shadow-xs btn-press"
+            >
+              <span>Buka SQL Editor</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
       </div>
 

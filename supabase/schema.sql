@@ -243,6 +243,45 @@ CREATE POLICY "Users can delete own cart items" ON public.cart_items
     FOR DELETE USING (auth.uid() = user_id);
 
 -- ========================================================
+-- STORAGE BUCKETS & POLICIES (Product Images & Media)
+-- ========================================================
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('products', 'products', true)
+ON CONFLICT (id) DO NOTHING;
+
+DO $$ BEGIN
+    CREATE POLICY "Public can view product images"
+    ON storage.objects FOR SELECT
+    USING (bucket_id = 'products');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users and admin can upload product images"
+    ON storage.objects FOR INSERT
+    TO authenticated
+    WITH CHECK (bucket_id = 'products');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users and admin can update product images"
+    ON storage.objects FOR UPDATE
+    TO authenticated
+    USING (bucket_id = 'products');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users and admin can delete product images"
+    ON storage.objects FOR DELETE
+    TO authenticated
+    USING (bucket_id = 'products');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+-- ========================================================
 -- SEED DATA (Kategori & Produk PMW Polsri)
 -- ========================================================
 
