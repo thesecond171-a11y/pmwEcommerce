@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useApp } from '@/context/AppContext';
 import { formatRupiah, formatDate, getOrderStatusInfo, getPaymentStatusInfo } from '@/lib/utils';
 import {
   DollarSign,
@@ -19,26 +18,62 @@ import {
   CreditCard,
   Database,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Inbox
 } from 'lucide-react';
 
+interface StatsData {
+  totalRevenue: number;
+  totalOrdersCount: number;
+  paidOrdersCount: number;
+  pendingPaymentCount: number;
+  processingCount: number;
+  shippedCount: number;
+  completedCount: number;
+  cancelledCount: number;
+  totalProductsCount: number;
+  activeProductsCount: number;
+  lowStockCount: number;
+  totalCategoriesCount: number;
+  totalCustomersCount: number;
+}
+
 export default function AdminDashboardPage() {
-  const { products, orders, categories, isSupabaseLive, refreshData, isLoadingData } = useApp();
+  const [stats, setStats] = useState<StatsData | null>(null);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastRefreshed, setLastRefreshed] = useState<string>('');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Metrics
-  const totalRevenue = orders
-    .filter((o) => o.payment_status === 'paid')
-    .reduce((acc, o) => acc + o.total_amount, 0);
+  const fetchLiveStats = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/admin/stats', { cache: 'no-store' });
+      if (!res.ok) {
+        throw new Error('Gagal mengambil data dari Supabase');
+      }
+      const json = await res.json();
+      if (json.success) {
+        setStats(json.stats);
+        setRecentOrders(json.recentOrders || []);
+        setLowStockProducts(json.lowStockProducts || []);
+        setLastRefreshed(new Date().toLocaleTimeString('id-ID'));
+      } else {
+        throw new Error(json.error || 'Terjadi kesalahan');
+      }
+    } catch (err: any) {
+      console.error('[AdminDashboard] Fetch error:', err);
+      setErrorMsg(err.message || 'Gagal terhubung ke database');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const paidOrdersCount = orders.filter((o) => o.payment_status === 'paid').length;
-  const pendingPaymentCount = orders.filter((o) => o.status === 'pending_payment').length;
-  const processingCount = orders.filter((o) => o.status === 'processing').length;
-  const shippedCount = orders.filter((o) => o.status === 'shipped').length;
-
-  const lowStockProducts = products.filter((p) => p.stock <= 30);
-  const activeProductsCount = products.filter((p) => p.is_active).length;
-
-  const recentOrders = [...orders].slice(0, 5);
+  useEffect(() => {
+    fetchLiveStats();
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -49,7 +84,7 @@ export default function AdminDashboardPage() {
             Ringkasan Penjualan & Statistik PMW
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Pantau arus transaksi, penerimaan dana merchant, dan operasional pengiriman produk mahasiswa
+            Data live terhubung murni langsung ke database Supabase (tanpa LocalStorage)
           </p>
         </div>
 
@@ -60,68 +95,52 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Supabase Status Banner */}
-      <div
-        className={`p-4 rounded-2xl border text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs ${
-          isSupabaseLive
-            ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
-            : 'bg-blue-50/70 border-blue-200 text-blue-900'
-        }`}
-      >
+      <div className="p-4 rounded-2xl border text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs bg-emerald-50/80 border-emerald-200 text-emerald-900">
         <div className="flex items-center gap-3">
-          <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-              isSupabaseLive ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-polsri-700'
-            }`}
-          >
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-700">
             <Database className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm">
-                {isSupabaseLive
-                  ? 'Database Supabase Terhubung & Live'
-                  : 'Database Supabase: Siap Digunakan'}
-              </span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                  isSupabaseLive
-                    ? 'bg-emerald-200/80 text-emerald-800'
-                    : 'bg-blue-200/80 text-blue-800'
-                }`}
-              >
-                Project: vguhuwlrjkncgetignqd
+              <span className="font-bold text-sm">Database Supabase Live & Terkoneksi Murni</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-200/80 text-emerald-800">
+                Ref: vguhuwlrjkncgetignqd
               </span>
             </div>
             <p className="text-slate-600 mt-0.5">
-              {isSupabaseLive
-                ? 'Seluruh data Produk, Kategori, Pesanan, dan Storage berjalan langsung di database Supabase.'
-                : 'Jalankan file supabase/schema.sql di SQL Editor Supabase untuk mengaktifkan sinkronisasi tabel live.'}
+              Semua perhitungan penjualan, inventaris, dan pelanggan diambil secara real-time dari PostgreSQL Supabase.
+              {lastRefreshed && <span className="ml-1 text-slate-500 font-medium">(Terakhir disinkronkan: {lastRefreshed})</span>}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => refreshData()}
-            disabled={isLoadingData}
+            onClick={fetchLiveStats}
+            disabled={isLoading}
             className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 shadow-xs disabled:opacity-50 btn-press"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingData ? 'animate-spin' : ''}`} />
-            <span>{isLoadingData ? 'Menyinkronkan...' : 'Cek Status Live'}</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>{isLoading ? 'Menyinkronkan...' : 'Muat Ulang Supabase'}</span>
           </button>
-          {!isSupabaseLive && (
-            <a
-              href="https://supabase.com/dashboard/project/vguhuwlrjkncgetignqd/sql/new"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 rounded-lg bg-polsri-600 font-semibold text-white hover:bg-polsri-700 flex items-center gap-1.5 shadow-xs btn-press"
-            >
-              <span>Buka SQL Editor</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          )}
+          <a
+            href="https://supabase.com/dashboard/project/vguhuwlrjkncgetignqd"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-lg bg-polsri-600 font-semibold text-white hover:bg-polsri-700 flex items-center gap-1.5 shadow-xs btn-press"
+          >
+            <span>Buka Supabase</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -136,12 +155,16 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900">
-              {formatRupiah(totalRevenue)}
-            </div>
+            {isLoading ? (
+              <div className="h-8 bg-slate-100 rounded-lg animate-pulse w-3/4 mb-1" />
+            ) : (
+              <div className="text-2xl sm:text-3xl font-black text-slate-900">
+                {formatRupiah(stats?.totalRevenue || 0)}
+              </div>
+            )}
             <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
               <TrendingUp className="w-3.5 h-3.5" />
-              <span>{paidOrdersCount} Transaksi Berhasil</span>
+              <span>{stats?.paidOrdersCount || 0} Transaksi Lunas di Supabase</span>
             </div>
           </div>
         </div>
@@ -157,10 +180,16 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900">{orders.length}</div>
+            {isLoading ? (
+              <div className="h-8 bg-slate-100 rounded-lg animate-pulse w-1/2 mb-1" />
+            ) : (
+              <div className="text-2xl sm:text-3xl font-black text-slate-900">
+                {stats?.totalOrdersCount || 0}
+              </div>
+            )}
             <div className="text-[11px] text-amber-600 font-semibold flex items-center gap-1 mt-1">
               <Clock className="w-3.5 h-3.5" />
-              <span>{pendingPaymentCount} Menunggu Pembayaran</span>
+              <span>{stats?.pendingPaymentCount || 0} Menunggu Pembayaran</span>
             </div>
           </div>
         </div>
@@ -176,35 +205,42 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900">
-              {activeProductsCount}
-            </div>
+            {isLoading ? (
+              <div className="h-8 bg-slate-100 rounded-lg animate-pulse w-1/2 mb-1" />
+            ) : (
+              <div className="text-2xl sm:text-3xl font-black text-slate-900">
+                {stats?.totalProductsCount || 0}
+              </div>
+            )}
             <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1 mt-1">
-              <span>{categories.length} Kategori Mahasiswa</span>
+              <span>{stats?.totalCategoriesCount || 0} Kategori di Supabase</span>
             </div>
           </div>
         </div>
 
-        {/* Low Stock Alert */}
+        {/* Total Customers */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Peringatan Stok Menipis
+              Pelanggan Terdaftar
             </span>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Users className="w-5 h-5" />
             </div>
           </div>
           <div>
-            <div className="text-2xl sm:text-3xl font-black text-amber-600">
-              {lowStockProducts.length} Produk
+            {isLoading ? (
+              <div className="h-8 bg-slate-100 rounded-lg animate-pulse w-1/2 mb-1" />
+            ) : (
+              <div className="text-2xl sm:text-3xl font-black text-slate-900">
+                {stats?.totalCustomersCount || 0}
+              </div>
+            )}
+            <div className="text-[11px] text-purple-600 font-semibold flex items-center gap-1 mt-1">
+              <Link href="/admin/customers" className="hover:underline">
+                Kelola profil pelanggan &rarr;
+              </Link>
             </div>
-            <Link
-              href="/admin/stock"
-              className="text-[11px] text-polsri-600 hover:underline font-semibold flex items-center gap-1 mt-1"
-            >
-              <span>Perbarui stok sekarang &rarr;</span>
-            </Link>
           </div>
         </div>
       </div>
@@ -215,11 +251,11 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-amber-300" />
             <span className="font-bold text-sm tracking-wide uppercase text-amber-300">
-              Arsitektur Alur Pembayaran Terpusat
+              Arsitektur Alur Pembayaran Terpusat PMW
             </span>
           </div>
           <p className="text-xs text-blue-100 leading-relaxed">
-            Sesuai regulasi unit usaha Polsri, seluruh dana transaksi pembeli langsung masuk ke <strong>satu akun merchant Midtrans resmi milik Admin PMW Polsri</strong>. Penyaluran laba bersih ke mahasiswa binaan dilakukan terjadwal melalui pembukuan kas internal PMW.
+            Sesuai regulasi unit usaha Polsri, seluruh dana transaksi pembeli langsung masuk ke <strong>satu rekening merchant Midtrans resmi milik Pengelola PMW Polsri</strong>. Data transaksi dicatat langsung ke database Supabase secara real-time.
           </p>
         </div>
 
@@ -228,19 +264,19 @@ export default function AdminDashboardPage() {
             href="/admin/orders"
             className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-bold transition-all whitespace-nowrap shadow-md"
           >
-            Kelola {processingCount} Pesanan Siap Kirim
+            Kelola {stats?.processingCount || 0} Pesanan Perlu Diproses
           </Link>
         </div>
       </div>
 
-      {/* Two Column Grid: Order Status Distribution + Low Stock Table */}
+      {/* Two Column Grid: Recent Orders + Operational Status */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left: Recent Orders Table (8 cols) */}
         <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-base text-slate-900">Transaksi Terbaru</h3>
-              <p className="text-xs text-slate-500">Daftar transaksi pelanggan terakhir</p>
+              <h3 className="font-bold text-base text-slate-900">Transaksi Terbaru di Supabase</h3>
+              <p className="text-xs text-slate-500">5 transaksi terakhir yang tercatat di database</p>
             </div>
             <Link
               href="/admin/orders"
@@ -252,54 +288,71 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="border border-slate-100 rounded-xl overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                <tr>
-                  <th className="p-3">Order ID</th>
-                  <th className="p-3">Pelanggan</th>
-                  <th className="p-3">Total</th>
-                  <th className="p-3">Status Pesanan</th>
-                  <th className="p-3">Pembayaran</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {recentOrders.map((o) => {
-                  const statusInfo = getOrderStatusInfo(o.status);
-                  const payInfo = getPaymentStatusInfo(o.payment_status);
+            {isLoading ? (
+              <div className="p-8 text-center space-y-2">
+                <RefreshCw className="w-6 h-6 animate-spin text-polsri-600 mx-auto" />
+                <p className="text-xs text-slate-500">Memuat data transaksi dari Supabase...</p>
+              </div>
+            ) : recentOrders.length === 0 ? (
+              <div className="p-8 text-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 mx-auto flex items-center justify-center border border-slate-200">
+                  <Inbox className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-bold text-slate-700">Belum Ada Transaksi Masuk</p>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  Belum ada pesanan yang dibuat oleh pelanggan di database Supabase. Transaksi baru akan otomatis muncul di sini.
+                </p>
+              </div>
+            ) : (
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                  <tr>
+                    <th className="p-3">Order ID</th>
+                    <th className="p-3">Pelanggan</th>
+                    <th className="p-3">Total</th>
+                    <th className="p-3">Status Pesanan</th>
+                    <th className="p-3">Pembayaran</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {recentOrders.map((o) => {
+                    const statusInfo = getOrderStatusInfo(o.status);
+                    const payInfo = getPaymentStatusInfo(o.payment_status);
 
-                  return (
-                    <tr key={o.id} className="hover:bg-slate-50/60">
-                      <td className="p-3 font-mono font-bold text-polsri-700">
-                        <Link href={`/admin/orders`} className="hover:underline">
-                          {o.order_number}
-                        </Link>
-                      </td>
-                      <td className="p-3">
-                        <span className="font-semibold text-slate-800 block">{o.customer_name}</span>
-                        <span className="text-[10px] text-slate-400">{o.customer_phone}</span>
-                      </td>
-                      <td className="p-3 font-bold text-slate-900">
-                        {formatRupiah(o.total_amount)}
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
-                        >
-                          {statusInfo.label}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${payInfo.color}`}
-                        >
-                          {payInfo.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={o.id} className="hover:bg-slate-50/60">
+                        <td className="p-3 font-mono font-bold text-polsri-700">
+                          <Link href={`/admin/orders`} className="hover:underline">
+                            {o.order_number}
+                          </Link>
+                        </td>
+                        <td className="p-3">
+                          <span className="font-semibold text-slate-800 block">{o.customer_name}</span>
+                          <span className="text-[10px] text-slate-400">{o.customer_phone}</span>
+                        </td>
+                        <td className="p-3 font-bold text-slate-900">
+                          {formatRupiah(o.total_amount)}
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
+                          >
+                            {statusInfo.label}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${payInfo.color}`}
+                          >
+                            {payInfo.label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
@@ -314,7 +367,9 @@ export default function AdminDashboardPage() {
                   <Clock className="w-4 h-4 text-amber-600" />
                   <span className="font-semibold">Menunggu Pembayaran</span>
                 </div>
-                <span className="font-black text-sm text-amber-800">{pendingPaymentCount}</span>
+                <span className="font-black text-sm text-amber-800">
+                  {stats?.pendingPaymentCount || 0}
+                </span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50/60 border border-blue-200">
@@ -322,7 +377,9 @@ export default function AdminDashboardPage() {
                   <Package className="w-4 h-4 text-polsri-600" />
                   <span className="font-semibold">Perlu Diproses</span>
                 </div>
-                <span className="font-black text-sm text-polsri-800">{processingCount}</span>
+                <span className="font-black text-sm text-polsri-800">
+                  {stats?.processingCount || 0}
+                </span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-purple-50/60 border border-purple-200">
@@ -330,7 +387,9 @@ export default function AdminDashboardPage() {
                   <Truck className="w-4 h-4 text-purple-600" />
                   <span className="font-semibold">Sedang Dikirim</span>
                 </div>
-                <span className="font-black text-sm text-purple-800">{shippedCount}</span>
+                <span className="font-black text-sm text-purple-800">
+                  {stats?.shippedCount || 0}
+                </span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/60 border border-emerald-200">
@@ -339,7 +398,7 @@ export default function AdminDashboardPage() {
                   <span className="font-semibold">Transaksi Selesai</span>
                 </div>
                 <span className="font-black text-sm text-emerald-800">
-                  {orders.filter((o) => o.status === 'completed').length}
+                  {stats?.completedCount || 0}
                 </span>
               </div>
             </div>
@@ -348,14 +407,22 @@ export default function AdminDashboardPage() {
           {/* Quick Action Navigation */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3 text-xs">
             <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
-              Aksi Cepat Admin
+              Aksi Cepat Admin PMW
             </h4>
             <div className="space-y-2">
               <Link
                 href="/admin/products"
                 className="w-full py-2.5 px-3 bg-slate-50 hover:bg-polsri-50 text-slate-700 hover:text-polsri-700 rounded-xl border border-slate-200 font-semibold flex items-center justify-between transition-colors"
               >
-                <span>Tambah Produk Baru</span>
+                <span>Kelola & Tambah Produk</span>
+                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+              </Link>
+
+              <Link
+                href="/admin/categories"
+                className="w-full py-2.5 px-3 bg-slate-50 hover:bg-polsri-50 text-slate-700 hover:text-polsri-700 rounded-xl border border-slate-200 font-semibold flex items-center justify-between transition-colors"
+              >
+                <span>Kelola Kategori Produk</span>
                 <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
               </Link>
 
@@ -363,7 +430,7 @@ export default function AdminDashboardPage() {
                 href="/admin/stock"
                 className="w-full py-2.5 px-3 bg-slate-50 hover:bg-polsri-50 text-slate-700 hover:text-polsri-700 rounded-xl border border-slate-200 font-semibold flex items-center justify-between transition-colors"
               >
-                <span>Periksa & Edit Stok Produk</span>
+                <span>Periksa & Edit Stok ({stats?.lowStockCount || 0} menipis)</span>
                 <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
               </Link>
 
@@ -381,4 +448,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-

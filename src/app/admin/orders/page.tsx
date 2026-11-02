@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Order, OrderStatus } from '@/types';
+import { Order, OrderStatus, PaymentStatus } from '@/types';
 import { formatRupiah, formatDate, getOrderStatusInfo, getPaymentStatusInfo } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,11 +17,20 @@ import {
   X,
   CreditCard,
   MapPin,
-  FileText
+  FileText,
+  RefreshCw,
+  Inbox,
+  AlertCircle,
+  Check
 } from 'lucide-react';
 
 export default function AdminOrdersPage() {
-  const { orders, updateOrderStatus, updatePaymentStatus } = useApp();
+  const { refreshData } = useApp();
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const [activeTab, setActiveTab] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,26 +40,77 @@ export default function AdminOrdersPage() {
   const [editingStatusOrder, setEditingStatusOrder] = useState<Order | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus>('processing');
   const [newTrackingNumber, setNewTrackingNumber] = useState('');
+  const [newPaymentStatus, setNewPaymentStatus] = useState<PaymentStatus>('unpaid');
+
+  const loadOrders = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/admin/orders', { cache: 'no-store' });
+      if (res.ok) {
+        const json = await res.json();
+        setOrders(json.data || []);
+      }
+    } catch (err) {
+      console.error('[AdminOrders] Fetch error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const openStatusModal = (order: Order) => {
     setEditingStatusOrder(order);
     setNewStatus(order.status);
     setNewTrackingNumber(order.tracking_number || '');
+    setNewPaymentStatus(order.payment_status);
   };
 
-  const handleSaveStatus = (e: React.FormEvent) => {
+  const handleSaveStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStatusOrder) return;
+    setIsSubmitting(true);
 
-    updateOrderStatus(editingStatusOrder.id, newStatus, newTrackingNumber);
-
-    if (newStatus === 'paid' || newStatus === 'completed' || newStatus === 'shipped') {
-      if (editingStatusOrder.payment_status === 'unpaid') {
-        updatePaymentStatus(editingStatusOrder.id, 'paid', 'Midtrans / Verifikasi Admin');
+    try {
+      // If status is paid/shipped/completed, auto mark payment_status as paid if still unpaid
+      let targetPaymentStatus = newPaymentStatus;
+      if (
+        (newStatus === 'paid' || newStatus === 'shipped' || newStatus === 'completed') &&
+        targetPaymentStatus === 'unpaid'
+      ) {
+        targetPaymentStatus = 'paid';
       }
-    }
 
-    setEditingStatusOrder(null);
+      const res = await fetch('/api/admin/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingStatusOrder.id,
+          status: newStatus,
+          tracking_number: newTrackingNumber,
+          payment_status: targetPaymentStatus,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Gagal memperbarui status pesanan');
+
+      showToast('Status pesanan berhasil diperbarui di Supabase');
+      setEditingStatusOrder(null);
+      await loadOrders();
+      refreshData();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredOrders = orders.filter((o) => {
@@ -76,14 +136,42 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       {/* Title */}
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-          Kelola Pesanan & Pengiriman
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-          Proses pesanan pelanggan, input resi ekspedisi / pickup kampus, dan pantau status Midtrans
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            Kelola Pesanan & Pengiriman PMW
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Data transaksi terhubung murni langsung ke tabel <code className="text-polsri-700 bg-polsri-50 px-1 py-0.5 rounded font-mono">public.orders</code> &amp; <code className="text-polsri-700 bg-polsri-50 px-1 py-0.5 rounded font-mono">public.order_items</code> Supabase
+          </p>
+        </div>
+
+        <button
+          onClick={loadOrders}
+          disabled={isLoading}
+          className="px-3.5 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs btn-press self-start sm:self-auto"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+          <span>Sinkronkan Supabase</span>
+        </button>
       </div>
+
+      {toast && (
+        <div
+          className={`p-3.5 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
+            toast.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          {toast.type === 'success' ? (
+            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          )}
+          <span>{toast.text}</span>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200">
@@ -103,8 +191,10 @@ export default function AdminOrdersPage() {
             >
               <span>{tab.label}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  activeTab === tab.id
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 text-slate-600'
                 }`}
               >
                 {count}
@@ -114,14 +204,14 @@ export default function AdminOrdersPage() {
         })}
       </div>
 
-      {/* Search Input */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <div className="relative">
+      {/* Search */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+        <div className="relative flex-1">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Cari berdasarkan No. Pesanan (POLSRI-...), Nama Pelanggan, atau No HP..."
+            placeholder="Cari berdasarkan Order ID, Nama Pelanggan, atau No. HP..."
             className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-polsri-500"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
@@ -134,21 +224,33 @@ export default function AdminOrdersPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="p-4">No. Pesanan</th>
-                <th className="p-4">Tanggal</th>
-                <th className="p-4">Pelanggan</th>
-                <th className="p-4">Metode Pengiriman</th>
-                <th className="p-4 text-right">Total Tagihan</th>
-                <th className="p-4 text-center">Status Pembayaran</th>
+                <th className="p-4">Order ID & Waktu</th>
+                <th className="p-4">Pelanggan & Tujuan</th>
+                <th className="p-4">Item & Kurir</th>
+                <th className="p-4 text-right">Total Transaksi</th>
                 <th className="p-4 text-center">Status Pesanan</th>
+                <th className="p-4 text-center">Status Pembayaran</th>
                 <th className="p-4 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredOrders.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400">
-                    Tidak ada pesanan yang sesuai dengan filter ini.
+                  <td colSpan={7} className="p-10 text-center">
+                    <RefreshCw className="w-6 h-6 animate-spin text-polsri-600 mx-auto mb-2" />
+                    <span className="text-xs text-slate-500 font-medium">Memuat pesanan dari Supabase...</span>
+                  </td>
+                </tr>
+              ) : filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-12 text-center space-y-2">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 mx-auto flex items-center justify-center border border-slate-200">
+                      <Inbox className="w-6 h-6" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-700">Belum Ada Pesanan Masuk di Supabase</p>
+                    <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                      Saat pelanggan membuat checkout di toko PMW, data pesanan dan rincian item akan otomatis muncul di sini.
+                    </p>
                   </td>
                 </tr>
               ) : (
@@ -158,45 +260,53 @@ export default function AdminOrdersPage() {
 
                   return (
                     <tr key={o.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="p-4 font-mono font-bold text-polsri-700">{o.order_number}</td>
-
-                      <td className="p-4 text-slate-500 whitespace-nowrap">
-                        {formatDate(o.created_at)}
-                      </td>
-
                       <td className="p-4">
-                        <span className="font-semibold text-slate-800 block">{o.customer_name}</span>
-                        <span className="text-[11px] text-slate-400">{o.customer_phone}</span>
-                      </td>
-
-                      <td className="p-4">
-                        <span className="font-medium text-slate-700 block truncate max-w-[150px]">
-                          {o.shipping_method}
+                        <span className="font-mono font-bold text-polsri-700 block">
+                          {o.order_number}
                         </span>
+                        <span className="text-[10px] text-slate-400">{formatDate(o.created_at)}</span>
                         {o.tracking_number && (
-                          <span className="text-[10px] font-mono font-bold text-polsri-600">
-                            Resi: {o.tracking_number}
-                          </span>
+                          <div className="flex items-center gap-1 text-[10px] text-slate-600 mt-1 font-mono bg-slate-100 px-1.5 py-0.5 rounded w-fit">
+                            <Truck className="w-3 h-3 text-polsri-600" />
+                            <span>Resi: {o.tracking_number}</span>
+                          </div>
                         )}
                       </td>
 
-                      <td className="p-4 text-right font-bold text-slate-900">
+                      <td className="p-4">
+                        <span className="font-semibold text-slate-900 block">{o.customer_name}</span>
+                        <span className="text-[10px] text-slate-500 block">{o.customer_phone}</span>
+                        <span className="text-[10px] text-slate-400 block truncate max-w-xs">
+                          {o.shipping_city}
+                        </span>
+                      </td>
+
+                      <td className="p-4">
+                        <span className="font-semibold text-slate-800 block">
+                          {o.items?.length || 0} Macam Produk
+                        </span>
+                        <span className="text-[10px] text-polsri-600 font-medium">
+                          {o.shipping_method}
+                        </span>
+                      </td>
+
+                      <td className="p-4 text-right font-black text-slate-900">
                         {formatRupiah(o.total_amount)}
                       </td>
 
                       <td className="p-4 text-center">
                         <span
-                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${payInfo.color}`}
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
                         >
-                          {payInfo.label}
+                          {statusInfo.label}
                         </span>
                       </td>
 
                       <td className="p-4 text-center">
                         <span
-                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${payInfo.color}`}
                         >
-                          {statusInfo.label}
+                          {payInfo.label}
                         </span>
                       </td>
 
@@ -227,7 +337,7 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {/* Update Status Modal with Motion */}
+      {/* Update Status Modal */}
       <AnimatePresence>
         {editingStatusOrder && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -271,6 +381,21 @@ export default function AdminOrdersPage() {
 
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1.5">
+                    Status Pembayaran
+                  </label>
+                  <select
+                    value={newPaymentStatus}
+                    onChange={(e) => setNewPaymentStatus(e.target.value as PaymentStatus)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-polsri-500 outline-none bg-white"
+                  >
+                    <option value="unpaid">Belum Lunas (Unpaid)</option>
+                    <option value="paid">Lunas (Paid)</option>
+                    <option value="refunded">Dikembalikan (Refunded)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1.5">
                     Nomor Resi Pengiriman / ID Pengambilan Kampus
                   </label>
                   <input
@@ -281,7 +406,7 @@ export default function AdminOrdersPage() {
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
                   />
                   <span className="text-[10px] text-slate-400 mt-1 block">
-                    Nomor ini akan langsung terlihat oleh pelanggan pada halaman riwayat pesanannya.
+                    Data ini akan langsung tersimpan ke Supabase dan dapat dipantau oleh pelanggan.
                   </span>
                 </div>
 
@@ -295,9 +420,11 @@ export default function AdminOrdersPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-polsri-600 hover:bg-polsri-700 text-white font-bold shadow-md shadow-polsri-600/30 btn-press"
+                    disabled={isSubmitting}
+                    className="px-6 py-2.5 rounded-xl bg-polsri-600 hover:bg-polsri-700 text-white font-bold shadow-md shadow-polsri-600/30 btn-press disabled:opacity-50 flex items-center gap-2"
                   >
-                    Simpan Perubahan
+                    {isSubmitting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Simpan ke Supabase</span>
                   </button>
                 </div>
               </form>
@@ -306,7 +433,7 @@ export default function AdminOrdersPage() {
         )}
       </AnimatePresence>
 
-      {/* Order Detail View Modal with Motion */}
+      {/* Order Detail View Modal */}
       <AnimatePresence>
         {viewingOrder && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">

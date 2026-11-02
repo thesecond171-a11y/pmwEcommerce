@@ -79,10 +79,10 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   // User state
   const [user, setUser] = useState<UserProfile | null>(mockUsers.customer);
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -97,21 +97,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       // 1. Fetch categories
       const liveCategories = await fetchCategoriesFromSupabase();
-      if (liveCategories && liveCategories.length > 0) {
+      if (liveCategories) {
         setCategories(liveCategories);
         setIsSupabaseLive(true);
       }
 
       // 2. Fetch products
       const liveProducts = await fetchProductsFromSupabase();
-      if (liveProducts && liveProducts.length > 0) {
+      if (liveProducts) {
         setProducts(liveProducts);
         setIsSupabaseLive(true);
       }
 
-      // 3. Fetch orders
-      const liveOrders = await fetchOrdersFromSupabase();
-      if (liveOrders && liveOrders.length > 0) {
+      // 3. Fetch orders directly from Supabase
+      const liveOrders = await fetchOrdersFromSupabase(undefined, true);
+      if (liveOrders) {
         setOrders(liveOrders);
       }
     } catch (err) {
@@ -127,12 +127,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const savedUser = localStorage.getItem('pmw_user');
       if (savedUser) setUser(JSON.parse(savedUser));
 
-      const savedProducts = localStorage.getItem('pmw_products');
-      if (savedProducts) setProducts(JSON.parse(savedProducts));
-
-      const savedCategories = localStorage.getItem('pmw_categories');
-      if (savedCategories) setCategories(JSON.parse(savedCategories));
-
       const savedCart = localStorage.getItem('pmw_cart');
       if (savedCart) {
         try {
@@ -146,19 +140,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }
         } catch {
           setCart([]);
-        }
-      }
-
-      const savedOrders = localStorage.getItem('pmw_orders');
-      if (savedOrders) {
-        try {
-          const parsed = JSON.parse(savedOrders);
-          if (Array.isArray(parsed)) {
-            const valid = parsed.filter((o: any) => o && o.id && Array.isArray(o.items));
-            setOrders(valid.length > 0 ? valid : mockOrders);
-          }
-        } catch {
-          setOrders(mockOrders);
         }
       }
     } catch (e) {
@@ -222,38 +203,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isHydrated) return;
     try {
-      localStorage.setItem('pmw_products', JSON.stringify(products));
-    } catch (e) {
-      console.error(e);
-    }
-  }, [products, isHydrated]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    try {
-      localStorage.setItem('pmw_categories', JSON.stringify(categories));
-    } catch (e) {
-      console.error(e);
-    }
-  }, [categories, isHydrated]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    try {
       localStorage.setItem('pmw_cart', JSON.stringify(cart));
     } catch (e) {
       console.error(e);
     }
   }, [cart, isHydrated]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    try {
-      localStorage.setItem('pmw_orders', JSON.stringify(orders));
-    } catch (e) {
-      console.error(e);
-    }
-  }, [orders, isHydrated]);
 
   // Role switch helper (for demo mode / testing)
   const switchUserRole = (role: 'admin' | 'customer') => {

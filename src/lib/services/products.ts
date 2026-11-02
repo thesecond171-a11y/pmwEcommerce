@@ -142,27 +142,51 @@ export async function updateProductStockInSupabase(
  * Upload an image file to Supabase Storage bucket 'products'
  */
 export async function uploadProductImageToSupabase(file: File): Promise<string | null> {
-  const supabase = createClient();
-  const fileExt = file.name.split('.').pop() || 'png';
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-  const filePath = `product-media/${fileName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('products')
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false,
+  // 1. Try server-side upload route first (uses Service Role to guarantee upload success regardless of RLS)
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/api/admin/upload', {
+      method: 'POST',
+      body: formData,
     });
-
-  if (uploadError) {
-    console.error('[Supabase Storage] upload error:', uploadError.message);
-    return null;
+    if (res.ok) {
+      const result = await res.json();
+      if (result.url) {
+        return result.url;
+      }
+    }
+  } catch (err) {
+    console.warn('[uploadProductImageToSupabase] Server API fallback to direct client:', err);
   }
 
-  const { data } = supabase.storage
-    .from('products')
-    .getPublicUrl(filePath);
+  // 2. Direct client fallback
+  try {
+    const supabase = createClient();
+    const fileExt = file.name.split('.').pop() || 'png';
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `product-media/${fileName}`;
 
-  return data.publicUrl;
+    const { error: uploadError } = await supabase.storage
+      .from('products')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('[Supabase Storage] upload error:', uploadError.message);
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from('products')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (directErr) {
+    console.error('[Supabase Storage] direct upload error:', directErr);
+    return null;
+  }
 }
 

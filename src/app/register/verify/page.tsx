@@ -171,3 +171,4 @@ export default function VerifyEmailPage() {
     </PageTransition>
   );
 }
+

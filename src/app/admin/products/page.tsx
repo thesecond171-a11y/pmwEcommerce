@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Product } from '@/types';
+import { Product, Category } from '@/types';
 import { formatRupiah } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { uploadProductImageToSupabase } from '@/lib/services/products';
 import {
   Package,
   Plus,
@@ -19,11 +18,20 @@ import {
   GraduationCap,
   Sparkles,
   AlertCircle,
-  Upload
+  Upload,
+  RefreshCw,
+  Database,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export default function AdminProductsPage() {
-  const { products, categories, addProduct, updateProduct, deleteProduct } = useApp();
+  const { refreshData } = useApp();
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -35,7 +43,7 @@ export default function AdminProductsPage() {
 
   // Form states for Add/Edit
   const [formTitle, setFormTitle] = useState('');
-  const [formCategory, setFormCategory] = useState(categories[0]?.id || '');
+  const [formCategory, setFormCategory] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formPrice, setFormPrice] = useState(50000);
   const [formStock, setFormStock] = useState(50);
@@ -46,6 +54,39 @@ export default function AdminProductsPage() {
   const [formIsFeatured, setFormIsFeatured] = useState(false);
   const [formIsActive, setFormIsActive] = useState(true);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Fetch pure data from Supabase
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const [prodsRes, catsRes] = await Promise.all([
+        fetch('/api/admin/products', { cache: 'no-store' }),
+        fetch('/api/admin/categories', { cache: 'no-store' }),
+      ]);
+
+      if (prodsRes.ok) {
+        const prodsJson = await prodsRes.json();
+        setProducts(prodsJson.data || []);
+      }
+      if (catsRes.ok) {
+        const catsJson = await catsRes.json();
+        setCategories(catsJson.data || []);
+      }
+    } catch (err) {
+      console.error('[AdminProducts] Load error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+    setStatusMessage({ text, type });
+    setTimeout(() => setStatusMessage(null), 3500);
+  };
 
   const openAddModal = () => {
     setFormTitle('');
@@ -77,48 +118,148 @@ export default function AdminProductsPage() {
     setFormIsActive(prod.is_active);
   };
 
-  const handleSaveAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    addProduct({
-      title: formTitle,
-      category_id: formCategory,
-      description: formDescription,
-      price: Number(formPrice),
-      stock: Number(formStock),
-      student_name: formStudentName,
-      jurusan: formJurusan,
-      nim: formNim,
-      images: [formImageUrl],
-      is_featured: formIsFeatured,
-      is_active: formIsActive,
-    });
-    setIsAddModalOpen(false);
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setFormImageUrl(data.url);
+        showToast('Foto berhasil diunggah ke Supabase Storage');
+      } else {
+        showToast(data.error || 'Gagal mengunggah foto', 'error');
+      }
+    } catch (err: any) {
+      showToast('Gagal mengunggah foto ke storage', 'error');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        title: formTitle,
+        category_id: formCategory || null,
+        description: formDescription,
+        price: Number(formPrice),
+        stock: Number(formStock),
+        student_name: formStudentName,
+        jurusan: formJurusan,
+        nim: formNim,
+        images: formImageUrl ? [formImageUrl] : [],
+        is_featured: formIsFeatured,
+        is_active: formIsActive,
+      };
+
+      const res = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Gagal menyimpan produk ke Supabase');
+
+      showToast('Produk berhasil disimpan ke database Supabase');
+      setIsAddModalOpen(false);
+      await loadData();
+      refreshData();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        id: editingProduct.id,
+        title: formTitle,
+        category_id: formCategory || null,
+        description: formDescription,
+        price: Number(formPrice),
+        stock: Number(formStock),
+        student_name: formStudentName,
+        jurusan: formJurusan,
+        nim: formNim,
+        images: formImageUrl ? [formImageUrl] : [],
+        is_featured: formIsFeatured,
+        is_active: formIsActive,
+      };
 
-    updateProduct(editingProduct.id, {
-      title: formTitle,
-      category_id: formCategory,
-      description: formDescription,
-      price: Number(formPrice),
-      stock: Number(formStock),
-      student_name: formStudentName,
-      jurusan: formJurusan,
-      nim: formNim,
-      images: [formImageUrl],
-      is_featured: formIsFeatured,
-      is_active: formIsActive,
-    });
-    setEditingProduct(null);
+      const res = await fetch('/api/admin/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Gagal memperbarui produk di Supabase');
+
+      showToast('Perubahan produk disimpan ke Supabase');
+      setEditingProduct(null);
+      await loadData();
+      refreshData();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = () => {
-    if (deletingProduct) {
-      deleteProduct(deletingProduct.id);
+  const handleToggleActive = async (prod: Product) => {
+    try {
+      const res = await fetch('/api/admin/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: prod.id,
+          is_active: !prod.is_active,
+        }),
+      });
+      if (res.ok) {
+        showToast(`Produk sekarang ${!prod.is_active ? 'Aktif' : 'Nonaktif'}`);
+        await loadData();
+        refreshData();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingProduct) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/products?id=${deletingProduct.id}`, {
+        method: 'DELETE',
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Gagal menghapus produk');
+
+      showToast('Produk berhasil dihapus dari database Supabase');
       setDeletingProduct(null);
+      await loadData();
+      refreshData();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -139,21 +280,51 @@ export default function AdminProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Kelola Produk Mahasiswa
+            Kelola Produk Mahasiswa PMW
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Tambah, perbarui data produk wirausaha, stok, harga, serta kurasi produk unggulan
+            Data terhubung murni langsung ke tabel <code className="text-polsri-700 bg-polsri-50 px-1 py-0.5 rounded font-mono">public.products</code> Supabase
           </p>
         </div>
 
-        <button
-          onClick={openAddModal}
-          className="px-4 py-2.5 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-polsri-600/30 transition-all self-start sm:self-auto hover-lift btn-press"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Tambah Produk Baru</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadData}
+            disabled={isLoading}
+            className="px-3.5 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs btn-press"
+            title="Sinkronkan dengan database Supabase"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Sinkronkan Supabase</span>
+          </button>
+
+          <button
+            onClick={openAddModal}
+            className="px-4 py-2.5 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-polsri-600/30 transition-all hover-lift btn-press"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Produk Baru</span>
+          </button>
+        </div>
       </div>
+
+      {/* Toast Alert */}
+      {statusMessage && (
+        <div
+          className={`p-3.5 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
+            statusMessage.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          {statusMessage.type === 'success' ? (
+            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          )}
+          <span>{statusMessage.text}</span>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
@@ -201,16 +372,25 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredProducts.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="p-10 text-center">
+                    <RefreshCw className="w-6 h-6 animate-spin text-polsri-600 mx-auto mb-2" />
+                    <span className="text-xs text-slate-500 font-medium">Memuat data produk dari Supabase...</span>
+                  </td>
+                </tr>
+              ) : filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-slate-400">
-                    Tidak ada produk yang sesuai dengan kriteria pencarian.
+                    Tidak ada produk yang sesuai dengan kriteria pencarian di Supabase.
                   </td>
                 </tr>
               ) : (
                 filteredProducts.map((p) => {
                   const categoryName =
-                    categories.find((c) => c.id === p.category_id)?.name || 'Karya Mahasiswa';
+                    p.category?.name ||
+                    categories.find((c) => c.id === p.category_id)?.name ||
+                    'Karya Mahasiswa';
 
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
@@ -269,11 +449,11 @@ export default function AdminProductsPage() {
 
                       <td className="p-4 text-center">
                         <button
-                          onClick={() => updateProduct(p.id, { is_active: !p.is_active })}
-                          className={`text-[11px] font-bold px-2 py-0.5 rounded-full border transition-all btn-press ${
+                          onClick={() => handleToggleActive(p)}
+                          className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition-all btn-press ${
                             p.is_active
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : 'bg-slate-100 text-slate-500 border-slate-200'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                              : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
                           }`}
                         >
                           {p.is_active ? 'Aktif' : 'Nonaktif'}
@@ -307,55 +487,51 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Add / Edit Product Modal with Motion */}
+      {/* Modal Add Product */}
       <AnimatePresence>
-        {(isAddModalOpen || editingProduct) && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        {isAddModalOpen && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.18 }}
-              className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 space-y-5"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
-                  {editingProduct ? 'Perbarui Data Produk Mahasiswa' : 'Tambah Produk Kewirausahaan Baru'}
-                </h3>
+              <div className="flex items-center justify-between border-b pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Tambah Produk Baru</h3>
+                  <p className="text-xs text-slate-500">
+                    Produk akan disimpan langsung ke tabel Supabase
+                  </p>
+                </div>
                 <button
-                  onClick={() => {
-                    setIsAddModalOpen(false);
-                    setEditingProduct(null);
-                  }}
-                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form
-                onSubmit={editingProduct ? handleSaveEdit : handleSaveAdd}
-                className="space-y-4 text-xs"
-              >
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Judul / Nama Produk *</label>
+              <form onSubmit={handleSaveAdd} className="space-y-4 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Nama / Judul Produk *</label>
                   <input
                     type="text"
                     required
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
-                    placeholder="Contoh: Pempek Crispy Tenggiri Frozen Pack"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                    placeholder="Contoh: Pempek Palembang Frozen Vakum"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Kategori Produk *</label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Kategori</label>
                     <select
                       value={formCategory}
                       onChange={(e) => setFormCategory(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none bg-white"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
                     >
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -365,115 +541,123 @@ export default function AdminProductsPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Harga (Rp) *</label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Harga (IDR) *</label>
                     <input
                       type="number"
                       required
-                      min={1000}
+                      min={0}
+                      step={500}
                       value={formPrice}
                       onChange={(e) => setFormPrice(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Stok Awal *</label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Stok Awal (pcs) *</label>
                     <input
                       type="number"
                       required
                       min={0}
                       value={formStock}
                       onChange={(e) => setFormStock(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
                     />
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Nama Mahasiswa Pembuat *</label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Mahasiswa Pembuat</label>
                     <input
                       type="text"
-                      required
                       value={formStudentName}
                       onChange={(e) => setFormStudentName(e.target.value)}
-                      placeholder="M. Rizky Pratama"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                      placeholder="Nama Ketua / Tim"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
                     />
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Jurusan / Prodi Polsri *</label>
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">NIM Mahasiswa</label>
                     <input
                       type="text"
-                      required
-                      value={formJurusan}
-                      onChange={(e) => setFormJurusan(e.target.value)}
-                      placeholder="D4 Teknik Kimia"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                      value={formNim}
+                      onChange={(e) => setFormNim(e.target.value)}
+                      placeholder="0621..."
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block font-semibold text-slate-700 text-xs sm:text-sm">Foto Produk *</label>
-                    <label className="text-[11px] font-semibold text-polsri-600 hover:text-polsri-700 cursor-pointer flex items-center gap-1">
-                      <Upload className="w-3.5 h-3.5" />
-                      {isUploadingImage ? 'Mengupload ke Supabase...' : 'Upload dari Perangkat'}
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Jurusan / Program Studi</label>
+                  <input
+                    type="text"
+                    value={formJurusan}
+                    onChange={(e) => setFormJurusan(e.target.value)}
+                    placeholder="Contoh: D4 Teknik Informatika"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
+                  />
+                </div>
+
+                {/* Upload Foto to Supabase Storage */}
+                <div className="space-y-2 border border-slate-200 rounded-2xl p-4 bg-slate-50/60">
+                  <label className="font-bold text-slate-800 flex items-center justify-between">
+                    <span>Foto Produk (Supabase Storage)</span>
+                    {isUploadingImage && (
+                      <span className="text-[11px] text-polsri-600 flex items-center gap-1 font-medium">
+                        <RefreshCw className="w-3 h-3 animate-spin" /> Mengunggah...
+                      </span>
+                    )}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl font-bold text-slate-700 cursor-pointer flex items-center gap-2 shrink-0">
+                      <Upload className="w-4 h-4 text-polsri-600" />
+                      <span>Pilih File Gambar</span>
                       <input
                         type="file"
                         accept="image/*"
+                        onChange={handleImageFileChange}
                         className="hidden"
-                        disabled={isUploadingImage}
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          setIsUploadingImage(true);
-                          try {
-                            const url = await uploadProductImageToSupabase(file);
-                            if (url) setFormImageUrl(url);
-                          } finally {
-                            setIsUploadingImage(false);
-                          }
-                        }}
                       />
                     </label>
+                    <input
+                      type="url"
+                      value={formImageUrl}
+                      onChange={(e) => setFormImageUrl(e.target.value)}
+                      placeholder="Atau tempel URL gambar..."
+                      className="flex-1 p-2 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500 text-xs"
+                    />
                   </div>
-                  <input
-                    type="url"
-                    required
-                    value={formImageUrl}
-                    onChange={(e) => setFormImageUrl(e.target.value)}
-                    placeholder="https://... atau klik 'Upload dari Perangkat' di atas"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
-                  />
                   {formImageUrl && (
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex items-center gap-3">
                       <img
                         src={formImageUrl}
                         alt="Preview"
-                        className="w-12 h-12 rounded-lg object-cover border border-slate-200 shrink-0"
+                        className="w-14 h-14 rounded-xl object-cover border border-slate-300"
                       />
-                      <span className="text-[11px] text-slate-400 truncate max-w-sm">{formImageUrl}</span>
+                      <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" /> URL Foto Aktif
+                      </span>
                     </div>
                   )}
                 </div>
 
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Deskripsi Lengkap Produk *</label>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Deskripsi Lengkap *</label>
                   <textarea
-                    rows={4}
+                    rows={3}
                     required
                     value={formDescription}
                     onChange={(e) => setFormDescription(e.target.value)}
-                    placeholder="Jelaskan keunggulan produk inovasi karya mahasiswa..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-polsri-500 outline-none"
+                    placeholder="Jelaskan keunikan produk, bahan, cara pakai, dan nilai inovasinya..."
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
                   />
                 </div>
 
-                <div className="flex gap-6 pt-2">
+                <div className="flex items-center gap-6 pt-2">
                   <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
                     <input
                       type="checkbox"
@@ -481,7 +665,7 @@ export default function AdminProductsPage() {
                       onChange={(e) => setFormIsFeatured(e.target.checked)}
                       className="rounded text-polsri-600 focus:ring-polsri-500"
                     />
-                    <span>Tandai Sebagai Produk Unggulan</span>
+                    <span>Tampilkan sebagai Produk Unggulan</span>
                   </label>
 
                   <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
@@ -491,26 +675,31 @@ export default function AdminProductsPage() {
                       onChange={(e) => setFormIsActive(e.target.checked)}
                       className="rounded text-polsri-600 focus:ring-polsri-500"
                     />
-                    <span>Tampilkan di Toko (Aktif)</span>
+                    <span>Aktif (Dapat Dipesan)</span>
                   </label>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 flex justify-end gap-2">
+                <div className="flex justify-end gap-3 pt-4 border-t">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsAddModalOpen(false);
-                      setEditingProduct(null);
-                    }}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 btn-press"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-4 py-2 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-polsri-600 hover:bg-polsri-700 text-white font-bold shadow-md shadow-polsri-600/30 hover-lift btn-press"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-md shadow-polsri-600/20 disabled:opacity-50"
                   >
-                    {editingProduct ? 'Simpan Perubahan' : 'Tambahkan Produk'}
+                    {isSubmitting ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Menyimpan ke Supabase...</span>
+                      </>
+                    ) : (
+                      <span>Simpan Produk</span>
+                    )}
                   </button>
                 </div>
               </form>
@@ -519,38 +708,254 @@ export default function AdminProductsPage() {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal with Motion */}
+      {/* Modal Edit Product */}
+      <AnimatePresence>
+        {editingProduct && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200"
+            >
+              <div className="flex items-center justify-between border-b pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Edit Produk PMW</h3>
+                  <p className="text-xs text-slate-500">ID: {editingProduct.id}</p>
+                </div>
+                <button
+                  onClick={() => setEditingProduct(null)}
+                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Nama / Judul Produk *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Kategori</label>
+                    <select
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
+                    >
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Harga (IDR) *</label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      step={500}
+                      value={formPrice}
+                      onChange={(e) => setFormPrice(Number(e.target.value))}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Stok (pcs) *</label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={formStock}
+                      onChange={(e) => setFormStock(Number(e.target.value))}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Mahasiswa Pembuat</label>
+                    <input
+                      type="text"
+                      value={formStudentName}
+                      onChange={(e) => setFormStudentName(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">NIM</label>
+                    <input
+                      type="text"
+                      value={formNim}
+                      onChange={(e) => setFormNim(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Jurusan / Program Studi</label>
+                  <input
+                    type="text"
+                    value={formJurusan}
+                    onChange={(e) => setFormJurusan(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
+                  />
+                </div>
+
+                {/* Upload Foto to Supabase Storage */}
+                <div className="space-y-2 border border-slate-200 rounded-2xl p-4 bg-slate-50/60">
+                  <label className="font-bold text-slate-800 flex items-center justify-between">
+                    <span>Foto Produk (Supabase Storage)</span>
+                    {isUploadingImage && (
+                      <span className="text-[11px] text-polsri-600 flex items-center gap-1 font-medium">
+                        <RefreshCw className="w-3 h-3 animate-spin" /> Mengunggah...
+                      </span>
+                    )}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl font-bold text-slate-700 cursor-pointer flex items-center gap-2 shrink-0">
+                      <Upload className="w-4 h-4 text-polsri-600" />
+                      <span>Ganti Gambar</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                    <input
+                      type="url"
+                      value={formImageUrl}
+                      onChange={(e) => setFormImageUrl(e.target.value)}
+                      placeholder="Atau tempel URL gambar..."
+                      className="flex-1 p-2 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500 text-xs"
+                    />
+                  </div>
+                  {formImageUrl && (
+                    <div className="mt-2 flex items-center gap-3">
+                      <img
+                        src={formImageUrl}
+                        alt="Preview"
+                        className="w-14 h-14 rounded-xl object-cover border border-slate-300"
+                      />
+                      <span className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" /> Foto Siap Digunakan
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Deskripsi Lengkap *</label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-polsri-500"
+                  />
+                </div>
+
+                <div className="flex items-center gap-6 pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={formIsFeatured}
+                      onChange={(e) => setFormIsFeatured(e.target.checked)}
+                      className="rounded text-polsri-600 focus:ring-polsri-500"
+                    />
+                    <span>Produk Unggulan</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={formIsActive}
+                      onChange={(e) => setFormIsActive(e.target.checked)}
+                      className="rounded text-polsri-600 focus:ring-polsri-500"
+                    />
+                    <span>Aktif</span>
+                  </label>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setEditingProduct(null)}
+                    className="px-4 py-2 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-md shadow-polsri-600/20 disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Menyimpan...</span>
+                      </>
+                    ) : (
+                      <span>Simpan Perubahan</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Delete Confirmation */}
       <AnimatePresence>
         {deletingProduct && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.18 }}
-              className="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl border border-slate-200"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl border border-slate-200"
             >
               <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center">
-                <AlertCircle className="w-6 h-6" />
+                <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-bold text-base text-slate-900">Hapus Produk Ini?</h3>
+                <h3 className="text-base font-bold text-slate-900">Hapus Produk dari Supabase?</h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Apakah Anda yakin ingin menghapus <strong>&ldquo;{deletingProduct.title}&rdquo;</strong> dari katalog?
+                  Apakah Anda yakin ingin menghapus <strong>&quot;{deletingProduct.title}&quot;</strong> secara permanen dari database Supabase?
                 </p>
               </div>
-              <div className="flex gap-2 pt-2">
+
+              <div className="flex justify-center gap-3 pt-2">
                 <button
                   onClick={() => setDeletingProduct(null)}
-                  className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 btn-press"
+                  className="px-4 py-2 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 text-xs"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/30 btn-press"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-md shadow-rose-600/20 disabled:opacity-50 flex items-center gap-1.5"
                 >
-                  Hapus
+                  {isSubmitting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Hapus Permanen</span>
                 </button>
               </div>
             </motion.div>
