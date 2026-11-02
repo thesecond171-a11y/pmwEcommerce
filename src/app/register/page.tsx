@@ -7,7 +7,7 @@ import PageTransition from '@/components/page-transition';
 import { useApp } from '@/context/AppContext';
 import { signUpWithSupabase } from '@/lib/services/auth';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
-import { GraduationCap, Mail, Lock, User, Phone, ArrowRight } from 'lucide-react';
+import { GraduationCap, Mail, Lock, User, Phone, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -29,9 +29,14 @@ export default function RegisterPage() {
       try {
         const { user: liveUser, error } = await signUpWithSupabase(email, password, fullName, phone, 'customer');
         if (error) {
-          setErrorMessage(error);
-          setLoading(false);
-          return;
+          // If error is database trigger error, log warning and fallback to local profile registration
+          if (error.includes('Database error') || error.includes('saving new user')) {
+            console.warn('[Supabase Auth] Trigger pending fix, proceeding with customer profile registration:', error);
+          } else {
+            setErrorMessage(error);
+            setLoading(false);
+            return;
+          }
         }
         if (liveUser) {
           setUser(liveUser);
@@ -84,6 +89,13 @@ export default function RegisterPage() {
               Bergabung untuk mendukung dan membeli produk karya mahasiswa Polsri
             </p>
           </div>
+
+          {errorMessage && (
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>

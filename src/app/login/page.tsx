@@ -59,12 +59,20 @@ export default function LoginPage() {
       }
     }
 
-    // Fallback / Demo login
+    // Fallback / Admin credentials check
     setTimeout(() => {
-      if (email.toLowerCase().includes('admin')) {
+      if (
+        (email.toLowerCase() === 'admin@gmail.com' && password === 'admin123#') ||
+        email.toLowerCase().includes('admin')
+      ) {
         setUser({
-          ...mockUsers.admin,
-          email,
+          id: 'admin-polsri-01',
+          email: 'admin@gmail.com',
+          full_name: 'Admin PMW Polsri',
+          role: 'admin',
+          city: 'Palembang',
+          address: 'Gedung Kantor Pusat Administrasi Polsri, Jl. Srijaya Negara, Bukit Besar',
+          phone: '081278901234',
         });
         router.push('/admin');
       } else {

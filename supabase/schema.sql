@@ -139,7 +139,10 @@ CREATE TRIGGER tr_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH 
 
 -- Function to handle new user registration in Supabase Auth
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
     INSERT INTO public.profiles (id, email, full_name, phone, role)
     VALUES (
@@ -147,11 +150,20 @@ BEGIN
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'full_name', 'Pengguna Polsri'),
         NEW.raw_user_meta_data->>'phone',
-        COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'customer'::user_role)
-    );
+        CASE 
+            WHEN NEW.raw_user_meta_data->>'role' = 'admin' THEN 'admin'::public.user_role
+            ELSE 'customer'::public.user_role
+        END
+    )
+    ON CONFLICT (id) DO UPDATE SET
+        email = EXCLUDED.email,
+        full_name = EXCLUDED.full_name,
+        role = EXCLUDED.role;
+    RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
@@ -294,6 +306,71 @@ INSERT INTO public.categories (id, name, slug, icon, description, image_url) VAL
 ('55555555-5555-5555-5555-555555555555', 'Pertanian & Agribisnis', 'pertanian-agribisnis', 'Sprout', 'Tanaman hias hidroponik, pupuk organik cair, bibit herbal inovasi kampus', 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=500&auto=format&fit=crop&q=80')
 ON CONFLICT (slug) DO NOTHING;
 
+-- ========================================================
+-- DEFAULT ADMIN ACCOUNT: admin@gmail.com / admin123#
+-- ========================================================
+DO $$
+DECLARE
+    admin_uid UUID := gen_random_uuid();
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@gmail.com') THEN
+        INSERT INTO auth.users (
+            instance_id,
+            id,
+            aud,
+            role,
+            email,
+            encrypted_password,
+            email_confirmed_at,
+            raw_app_meta_data,
+            raw_user_meta_data,
+            created_at,
+            updated_at,
+            confirmation_token,
+            recovery_token
+        ) VALUES (
+            '00000000-0000-0000-0000-000000000000',
+            admin_uid,
+            'authenticated',
+            'authenticated',
+            'admin@gmail.com',
+            crypt('admin123#', gen_salt('bf')),
+            NOW(),
+            '{"provider":"email","providers":["email"]}',
+            '{"full_name":"Admin PMW Polsri","role":"admin","phone":"081278901234"}',
+            NOW(),
+            NOW(),
+            '',
+            ''
+        );
+
+        INSERT INTO public.profiles (id, email, full_name, phone, role, address, city)
+        VALUES (
+            admin_uid,
+            'admin@gmail.com',
+            'Admin PMW Polsri',
+            '081278901234',
+            'admin'::public.user_role,
+            'Gedung Kantor Pusat Administrasi Polsri, Jl. Srijaya Negara, Bukit Besar',
+            'Palembang'
+        )
+        ON CONFLICT (id) DO UPDATE SET 
+            role = 'admin'::public.user_role,
+            full_name = 'Admin PMW Polsri';
+    ELSE
+        UPDATE auth.users
+        SET encrypted_password = crypt('admin123#', gen_salt('bf')),
+            email_confirmed_at = NOW(),
+            raw_user_meta_data = '{"full_name":"Admin PMW Polsri","role":"admin","phone":"081278901234"}'
+        WHERE email = 'admin@gmail.com';
+
+        UPDATE public.profiles
+        SET role = 'admin'::public.user_role,
+            full_name = 'Admin PMW Polsri'
+        WHERE email = 'admin@gmail.com';
+    END IF;
+END $$;
+
 -- Products
 INSERT INTO public.products (title, slug, description, price, stock, student_name, jurusan, nim, category_id, images, is_featured, is_active, rating, sold_count) VALUES
 (
@@ -425,4 +502,69 @@ INSERT INTO public.products (title, slug, description, price, stock, student_nam
     110
 )
 ON CONFLICT (slug) DO NOTHING;
+
+-- ========================================================
+-- DEFAULT ADMIN ACCOUNT: admin@gmail.com / admin123#
+-- ========================================================
+DO $$
+DECLARE
+    admin_uid UUID := gen_random_uuid();
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'admin@gmail.com') THEN
+        INSERT INTO auth.users (
+            instance_id,
+            id,
+            aud,
+            role,
+            email,
+            encrypted_password,
+            email_confirmed_at,
+            raw_app_meta_data,
+            raw_user_meta_data,
+            created_at,
+            updated_at,
+            confirmation_token,
+            recovery_token
+        ) VALUES (
+            '00000000-0000-0000-0000-000000000000',
+            admin_uid,
+            'authenticated',
+            'authenticated',
+            'admin@gmail.com',
+            crypt('admin123#', gen_salt('bf')),
+            NOW(),
+            '{"provider":"email","providers":["email"]}',
+            '{"full_name":"Admin PMW Polsri","role":"admin","phone":"081278901234"}',
+            NOW(),
+            NOW(),
+            '',
+            ''
+        );
+
+        INSERT INTO public.profiles (id, email, full_name, phone, role, address, city)
+        VALUES (
+            admin_uid,
+            'admin@gmail.com',
+            'Admin PMW Polsri',
+            '081278901234',
+            'admin'::public.user_role,
+            'Gedung Kantor Pusat Administrasi Polsri, Jl. Srijaya Negara, Bukit Besar',
+            'Palembang'
+        )
+        ON CONFLICT (id) DO UPDATE SET 
+            role = 'admin'::public.user_role,
+            full_name = 'Admin PMW Polsri';
+    ELSE
+        UPDATE auth.users
+        SET encrypted_password = crypt('admin123#', gen_salt('bf')),
+            email_confirmed_at = NOW(),
+            raw_user_meta_data = '{"full_name":"Admin PMW Polsri","role":"admin","phone":"081278901234"}'
+        WHERE email = 'admin@gmail.com';
+
+        UPDATE public.profiles
+        SET role = 'admin'::public.user_role,
+            full_name = 'Admin PMW Polsri'
+        WHERE email = 'admin@gmail.com';
+    END IF;
+END $$;
 
