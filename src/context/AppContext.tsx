@@ -110,7 +110,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 3. Fetch orders
-      const liveOrders = await fetchOrdersFromSupabase(user?.id, user?.role === 'admin');
+      const liveOrders = await fetchOrdersFromSupabase();
       if (liveOrders && liveOrders.length > 0) {
         setOrders(liveOrders);
       }
@@ -119,7 +119,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoadingData(false);
     }
-  }, [user]);
+  }, []);
 
   // Initial load from LocalStorage first (for instant rendering), then sync with Supabase
   useEffect(() => {
@@ -169,7 +169,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // Initial sync with live Supabase database
     refreshData();
-  }, [refreshData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Supabase Auth listener
   useEffect(() => {
@@ -521,10 +522,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           prev.map((p) =>
             p.id === item.product_id
               ? {
-                  ...p,
-                  stock: Math.max(0, p.stock - item.quantity),
-                  sold_count: p.sold_count + item.quantity,
-                }
+                ...p,
+                stock: Math.max(0, p.stock - item.quantity),
+                sold_count: p.sold_count + item.quantity,
+              }
               : p
           )
         );

@@ -40,12 +40,9 @@ export default function RegisterPage() {
         return;
       }
 
-      if (data.user) {
-        setUser(data.user);
-        setLoading(false);
-        router.push('/');
-        return;
-      }
+      // Transition to verification info page
+      router.push(`/register/verify?email=${encodeURIComponent(email)}`);
+      return;
     } catch (err: any) {
       console.warn('API register fallback:', err);
     }
@@ -61,7 +58,7 @@ export default function RegisterPage() {
       address: 'Politeknik Negeri Sriwijaya, Bukit Besar',
     });
     setLoading(false);
-    router.push('/');
+    router.push(`/register/verify?email=${encodeURIComponent(email)}`);
   };
 
   return (
