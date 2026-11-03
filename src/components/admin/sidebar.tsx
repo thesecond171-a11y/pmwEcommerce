@@ -74,7 +74,7 @@ export default function AdminSidebar() {
         <div className="p-5 border-b border-slate-800 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shrink-0">
             <Image
-              src="/logo-polsri.jpg"
+              src="/logo-polsri.png"
               alt="Logo Resmi Polsri"
               width={36}
               height={36}
@@ -105,11 +105,10 @@ export default function AdminSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  isActive
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${isActive
                     ? 'bg-polsri-600 text-white shadow-md shadow-polsri-600/30'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />

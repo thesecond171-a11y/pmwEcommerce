@@ -88,7 +88,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shadow-polsri-900/10 border border-slate-200 group-hover:scale-105 transition-transform shrink-0">
               <Image
-                src="/logo-polsri.jpg"
+                src="/logo-polsri.png"
                 alt="Logo POLSRI"
                 width={40}
                 height={40}

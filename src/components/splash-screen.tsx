@@ -111,7 +111,7 @@ export default function SplashScreen() {
               <div className="absolute -inset-2 bg-gradient-to-r from-polsri-500 to-amber-400 rounded-3xl blur-xl opacity-60 animate-pulse" />
               <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white p-2.5 border border-white/30 shadow-2xl flex items-center justify-center">
                 <Image
-                  src="/logo-polsri.jpg"
+                  src="/logo-polsri.png"
                   alt="Logo Resmi Polsri"
                   width={96}
                   height={96}

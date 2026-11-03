@@ -55,7 +55,7 @@ export default function RegisterPage() {
         <Link href="/" className="flex items-center gap-3 mb-6 sm:mb-8 group">
           <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-lg shadow-polsri-900/10 border border-slate-200 group-hover:scale-105 transition-transform shrink-0">
             <Image
-              src="/logo-polsri.jpg"
+              src="/logo-polsri.png"
               alt="Logo Resmi Polsri"
               width={44}
               height={44}

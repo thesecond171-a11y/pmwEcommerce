@@ -69,7 +69,7 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shrink-0 border border-slate-700">
                 <Image
-                  src="/logo-polsri.jpg"
+                  src="/logo-polsri.png"
                   alt="Logo Resmi Polsri"
                   width={36}
                   height={36}
