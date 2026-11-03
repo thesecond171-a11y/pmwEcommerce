@@ -8,7 +8,6 @@ import BannerSlider from '@/components/banner-slider';
 import ProductCard from '@/components/product-card';
 import PageTransition from '@/components/page-transition';
 import { useApp } from '@/context/AppContext';
-import { motion, type Variants } from 'framer-motion';
 import {
   UtensilsCrossed,
   Shirt,
@@ -23,25 +22,6 @@ import {
   Building2,
   CheckCircle2
 } from 'lucide-react';
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.25, ease: 'easeOut' },
-  },
-};
 
 export default function HomePage() {
   const { products, categories, setSelectedCategory } = useApp();
@@ -96,34 +76,28 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-20px' }}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4"
-            >
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
               {categories.map((category) => {
                 const count = products.filter((p) => p.category_id === category.id).length;
                 return (
-                  <motion.div key={category.id} variants={itemVariants}>
+                  <div key={category.id}>
                     <Link
                       href={`/products?category=${category.slug}`}
                       onClick={() => setSelectedCategory(category.slug)}
-                      className="group bg-white p-4 rounded-2xl border border-slate-200/80 hover-lift hover:border-polsri-300 hover:shadow-card-hover flex flex-col items-center text-center h-full"
+                      className="group bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 hover-lift hover:border-polsri-300 hover:shadow-card-hover flex flex-col items-center text-center h-full transition-all"
                     >
-                      <div className="w-14 h-14 rounded-2xl bg-polsri-50 group-hover:bg-polsri-100/70 transition-all flex items-center justify-center mb-3">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-polsri-50 group-hover:bg-polsri-100/70 transition-all flex items-center justify-center mb-2.5 sm:mb-3">
                         {getCategoryIcon(category.icon)}
                       </div>
                       <h3 className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-polsri-600 transition-colors">
                         {category.name}
                       </h3>
-                      <span className="text-[11px] text-slate-400 mt-0.5">{count} Produk</span>
+                      <span className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">{count} Produk</span>
                     </Link>
-                  </motion.div>
+                  </div>
                 );
               })}
-            </motion.div>
+            </div>
           </section>
 
           {/* Featured Products Section */}
@@ -151,19 +125,13 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-20px' }}
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6"
-            >
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {featuredProducts.slice(0, 4).map((product) => (
-                <motion.div key={product.id} variants={itemVariants}>
+                <div key={product.id}>
                   <ProductCard product={product} />
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </section>
 
           {/* Polsri Entrepreneurship Impact Banner */}
@@ -220,19 +188,13 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-20px' }}
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6"
-            >
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {activeProducts.map((product) => (
-                <motion.div key={product.id} variants={itemVariants}>
+                <div key={product.id}>
                   <ProductCard product={product} />
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </section>
         </main>
       </PageTransition>
