@@ -6,9 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 
 const loadingSteps = [
-  'Menyiapkan etalase produk inovasi mahasiswa...',
-  'Sinkronisasi database Supabase...',
-  'Memuat katalog wirausaha Politeknik Negeri Sriwijaya...',
   'Selamat Datang di PMW Polsri Store!',
 ];
 
@@ -132,7 +129,7 @@ export default function SplashScreen() {
             </motion.div>
 
             {/* Typography */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.6 }}
@@ -149,7 +146,7 @@ export default function SplashScreen() {
               <p className="text-xs sm:text-sm text-slate-300 font-normal leading-relaxed max-w-sm mx-auto">
                 Platform Resmi Produk Inovasi, Kuliner, Merchandise, dan Teknologi Mahasiswa Politeknik Negeri Sriwijaya
               </p>
-            </motion.div>
+            </motion.div> */}
           </div>
 
           {/* Bottom Progress Bar & Step */}
