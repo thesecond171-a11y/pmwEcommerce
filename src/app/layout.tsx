@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 import SmoothScrollProvider from '@/components/smooth-scroll';
+import SplashScreen from '@/components/splash-screen';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
@@ -41,6 +42,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased selection:bg-polsri-500 selection:text-white">
+        <SplashScreen />
         <SmoothScrollProvider>
           <AppProvider>
             {children}

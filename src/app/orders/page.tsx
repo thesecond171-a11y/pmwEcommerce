@@ -24,11 +24,47 @@ export default function CustomerOrdersPage() {
   const { orders, user } = useApp();
   const [activeTab, setActiveTab] = useState<string>('all');
 
+  if (!user) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 max-w-md mx-auto px-4 py-16 flex items-center justify-center text-center">
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-5 w-full">
+            <div className="w-16 h-16 rounded-2xl bg-polsri-50 text-polsri-600 mx-auto flex items-center justify-center">
+              <FileText className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Perlu Masuk Akun</h2>
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                Silakan masuk terlebih dahulu untuk melihat status transaksi dan riwayat pesanan Anda.
+              </p>
+            </div>
+            <div className="space-y-2 pt-2">
+              <Link
+                href="/login"
+                className="w-full py-3 bg-polsri-600 hover:bg-polsri-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-polsri-600/20 btn-press"
+              >
+                <span>Masuk Sekarang</span>
+              </Link>
+              <Link
+                href="/"
+                className="w-full py-2.5 text-xs text-slate-600 hover:text-polsri-600 font-semibold block"
+              >
+                Kembali ke Beranda
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const userOrders = orders.filter((o) => {
-    if (user && o.user_id && o.user_id !== user.id && user.role !== 'admin') {
-      return true;
-    }
-    return true;
+    return (
+      o.user_id === user.id ||
+      (user.email && o.customer_email?.toLowerCase() === user.email.toLowerCase())
+    );
   });
 
   const filteredOrders = userOrders.filter((order) => {

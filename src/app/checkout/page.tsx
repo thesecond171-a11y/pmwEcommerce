@@ -74,14 +74,12 @@ export default function CheckoutPage() {
   const { cart, cartTotal, user, createOrder } = useApp();
   const validCart = cart.filter((item) => item && item.product && item.product.id);
 
-  const [customerName, setCustomerName] = useState(user?.full_name || 'Alif Akbar Ramadhan');
-  const [customerEmail, setCustomerEmail] = useState(user?.email || 'alif.akbar@student.polsri.ac.id');
-  const [customerPhone, setCustomerPhone] = useState(user?.phone || '081278901234');
-  const [shippingAddress, setShippingAddress] = useState(
-    user?.address || 'Jl. Srijaya Negara, Bukit Besar, Asrama Mahasiswa Polsri Blok B No. 12'
-  );
+  const [customerName, setCustomerName] = useState(user?.full_name || '');
+  const [customerEmail, setCustomerEmail] = useState(user?.email || '');
+  const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
+  const [shippingAddress, setShippingAddress] = useState(user?.address || '');
   const [shippingCity, setShippingCity] = useState(user?.city || 'Palembang');
-  const [shippingPostalCode, setShippingPostalCode] = useState(user?.postal_code || '30139');
+  const [shippingPostalCode, setShippingPostalCode] = useState(user?.postal_code || '');
   const [notes, setNotes] = useState('');
 
   const [selectedShipping, setSelectedShipping] = useState<ShippingOption>(shippingOptions[0]);
@@ -92,6 +90,53 @@ export default function CheckoutPage() {
   const [showSimulatedSnap, setShowSimulatedSnap] = useState(false);
   const [snapOrderId, setSnapOrderId] = useState('');
   const [selectedSimulatedMethod, setSelectedSimulatedMethod] = useState('qris');
+
+  React.useEffect(() => {
+    if (user) {
+      if (user.full_name) setCustomerName(user.full_name);
+      if (user.email) setCustomerEmail(user.email);
+      if (user.phone) setCustomerPhone(user.phone);
+      if (user.address) setShippingAddress(user.address);
+      if (user.city) setShippingCity(user.city);
+      if (user.postal_code) setShippingPostalCode(user.postal_code);
+    }
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 max-w-md mx-auto px-4 py-16 flex items-center justify-center text-center">
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-5 w-full">
+            <div className="w-16 h-16 rounded-2xl bg-polsri-50 text-polsri-600 mx-auto flex items-center justify-center">
+              <Lock className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Masuk untuk Melanjutkan Checkout</h2>
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                Silakan masuk ke akun pelanggan Anda agar pesanan dan alamat pengiriman dapat tercatat dengan aman.
+              </p>
+            </div>
+            <div className="space-y-2 pt-2">
+              <Link
+                href="/login?redirect=/checkout"
+                className="w-full py-3 bg-polsri-600 hover:bg-polsri-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-polsri-600/20 btn-press"
+              >
+                <span>Masuk Sekarang</span>
+              </Link>
+              <Link
+                href="/register?redirect=/checkout"
+                className="w-full py-2.5 text-xs text-slate-600 hover:text-polsri-600 font-semibold block"
+              >
+                Belum punya akun? Daftar
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const grandTotal = cartTotal + selectedShipping.fee;
 

@@ -38,29 +38,36 @@ export default function AdminHeader() {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Quick Role Toggle for Examiner */}
-        <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-full text-xs">
-          <span className="text-slate-500 text-[11px]">Uji Mode:</span>
-          <button
-            onClick={() => {
-              switchUserRole('customer');
-              router.push('/');
-            }}
-            className="text-[11px] font-semibold text-polsri-700 hover:text-polsri-900 px-2 py-0.5 rounded-full hover:bg-white transition-all flex items-center gap-1"
-          >
-            <Store className="w-3 h-3" />
-            Beralih ke Pelanggan
-          </button>
-        </div>
+        {/* Storefront Link */}
+        <Link
+          href="/"
+          className="text-xs font-semibold text-polsri-700 hover:text-polsri-900 bg-polsri-50 hover:bg-polsri-100 border border-polsri-200 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+        >
+          <Store className="w-3.5 h-3.5" />
+          <span>Lihat Etalase Toko</span>
+        </Link>
+
+        {/* Logout Button */}
+        <button
+          onClick={async () => {
+            await logout();
+            router.push('/login');
+          }}
+          className="text-xs font-semibold text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+          title="Keluar dari akun admin"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Keluar</span>
+        </button>
 
         {/* Admin profile pill */}
         <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
           <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center font-bold text-xs">
-            A
+            {user?.full_name?.charAt(0) || 'A'}
           </div>
           <div className="hidden sm:block text-left text-xs">
-            <span className="font-bold text-slate-800 block leading-tight">Admin PMW</span>
-            <span className="text-[10px] text-slate-400">admin.pmw@polsri.ac.id</span>
+            <span className="font-bold text-slate-800 block leading-tight">{user?.full_name || 'Admin PMW'}</span>
+            <span className="text-[10px] text-slate-400">{user?.email || 'admin@gmail.com'}</span>
           </div>
         </div>
       </div>

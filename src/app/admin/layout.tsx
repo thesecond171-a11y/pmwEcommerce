@@ -30,20 +30,20 @@ export default function AdminLayout({
           </div>
 
           <div className="space-y-3">
-            <button
-              onClick={() => switchUserRole('admin')}
+            <Link
+              href="/login"
               className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 hover-lift btn-press"
             >
-              <span>Masuk Sebagai Admin PMW (Mode Demo)</span>
+              <span>Login Akun Admin PMW</span>
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
 
             <Link
               href="/"
               className="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl text-xs flex items-center justify-center gap-2 transition-colors btn-press"
             >
               <Store className="w-4 h-4 text-slate-400" />
-              <span>Kembali ke Halaman Pelanggan</span>
+              <span>Kembali ke Halaman Utama</span>
             </Link>
           </div>
         </div>

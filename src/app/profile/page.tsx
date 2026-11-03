@@ -22,19 +22,64 @@ import {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, setUser, switchUserRole, orders, logout } = useApp();
+  const { user, setUser, orders, logout } = useApp();
 
-  const [fullName, setFullName] = useState(user?.full_name || 'Alif Akbar Ramadhan');
-  const [email, setEmail] = useState(user?.email || 'alif.akbar@student.polsri.ac.id');
-  const [phone, setPhone] = useState(user?.phone || '081278901234');
-  const [address, setAddress] = useState(
-    user?.address || 'Jl. Srijaya Negara, Bukit Besar, Asrama Mahasiswa Polsri Blok B No. 12'
-  );
+  const [fullName, setFullName] = useState(user?.full_name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [address, setAddress] = useState(user?.address || '');
   const [city, setCity] = useState(user?.city || 'Palembang');
-  const [postalCode, setPostalCode] = useState(user?.postal_code || '30139');
+  const [postalCode, setPostalCode] = useState(user?.postal_code || '');
   const [savedNotice, setSavedNotice] = useState(false);
 
-  const userOrders = orders.filter((o) => o.user_id === user?.id || !o.user_id);
+  React.useEffect(() => {
+    if (user) {
+      setFullName(user.full_name || '');
+      setEmail(user.email || '');
+      setPhone(user.phone || '');
+      setAddress(user.address || '');
+      setCity(user.city || 'Palembang');
+      setPostalCode(user.postal_code || '');
+    }
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 max-w-lg mx-auto px-4 py-16 flex items-center justify-center text-center">
+          <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-5 w-full">
+            <div className="w-16 h-16 rounded-2xl bg-polsri-50 text-polsri-600 mx-auto flex items-center justify-center">
+              <User className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Perlu Masuk Akun</h2>
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                Silakan masuk terlebih dahulu untuk mengakses data profil, alamat pengiriman, dan riwayat belanja Anda.
+              </p>
+            </div>
+            <div className="space-y-2 pt-2">
+              <Link
+                href="/login"
+                className="w-full py-3 bg-polsri-600 hover:bg-polsri-700 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-polsri-600/20 btn-press"
+              >
+                <span>Masuk Sekarang</span>
+              </Link>
+              <Link
+                href="/register"
+                className="w-full py-2.5 text-xs text-slate-600 hover:text-polsri-600 font-semibold block"
+              >
+                Belum punya akun? Daftar
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const userOrders = orders.filter((o) => o.user_id === user?.id || (user?.email && o.customer_email === user.email));
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,32 +183,21 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Switch Role Simulator Buttons */}
+                {/* Status Role Badge */}
                 <div className="border-t border-slate-100 pt-4 text-left">
-                  <span className="text-xs font-bold text-slate-700 block mb-2">
-                    Uji Coba Cepat Role Akun:
+                  <span className="text-xs font-bold text-slate-700 block mb-1">
+                    Status Akun Terdaftar:
                   </span>
-                  <div className="grid grid-cols-2 gap-2 text-[11px]">
-                    <button
-                      onClick={() => switchUserRole('customer')}
-                      className={`p-2 rounded-xl border font-bold text-center transition-all btn-press ${
-                        user?.role === 'customer'
-                          ? 'bg-polsri-600 text-white border-polsri-600'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      Pelanggan
-                    </button>
-                    <button
-                      onClick={() => switchUserRole('admin')}
-                      className={`p-2 rounded-xl border font-bold text-center transition-all btn-press ${
-                        user?.role === 'admin'
-                          ? 'bg-amber-500 text-slate-900 border-amber-500'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      Admin PMW
-                    </button>
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                    <Shield className="w-4 h-4 text-polsri-600 shrink-0" />
+                    <div>
+                      <span className="font-bold text-slate-800 block">
+                        {user.role === 'admin' ? 'Pengelola PMW Polsri' : 'Pelanggan Terverifikasi'}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        {user.role === 'admin' ? 'Akses Penuh Dashboard Admin' : 'Dapat Berbelanja Produk Mahasiswa'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

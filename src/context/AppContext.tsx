@@ -77,8 +77,8 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  // User state
-  const [user, setUser] = useState<UserProfile | null>(mockUsers.customer);
+  // User state - defaults to null (logged out / guest)
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -125,7 +125,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem('pmw_user');
-      if (savedUser) setUser(JSON.parse(savedUser));
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          // Only restore if not old dummy mock users
+          if (parsed && parsed.id && parsed.id !== 'cust-01' && parsed.id !== 'admin-01') {
+            setUser(parsed);
+          } else {
+            localStorage.removeItem('pmw_user');
+            setUser(null);
+          }
+        } catch {
+          setUser(null);
+        }
+      }
 
       const savedCart = localStorage.getItem('pmw_cart');
       if (savedCart) {
@@ -181,6 +194,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           postal_code: profile?.postal_code,
           created_at: profile?.created_at,
         });
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        try {
+          localStorage.removeItem('pmw_user');
+        } catch {}
       }
     });
 
@@ -209,7 +227,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cart, isHydrated]);
 
-  // Role switch helper (for demo mode / testing)
+  // Role switch helper (kept for safe fallback if called)
   const switchUserRole = (role: 'admin' | 'customer') => {
     setUser(mockUsers[role]);
   };
@@ -220,6 +238,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore
     }
+    try {
+      localStorage.removeItem('pmw_user');
+    } catch {}
     setUser(null);
   };
 
