@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import PageTransition from '@/components/page-transition';
 import { motion } from 'framer-motion';
@@ -145,16 +146,23 @@ export default function VerifyEmailPage() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center px-4 py-12">
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 mb-8 group">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-polsri-800 to-polsri-600 flex items-center justify-center text-white shadow-lg shadow-polsri-600/30 group-hover:scale-105 transition-transform">
-            <GraduationCap className="w-7 h-7 text-amber-300" />
+        {/* Brand Logo with Official Polsri Logo */}
+        <Link href="/" className="flex items-center gap-3 mb-6 sm:mb-8 group">
+          <div className="w-12 h-12 rounded-2xl bg-white p-1 flex items-center justify-center shadow-lg shadow-polsri-900/10 border border-slate-200 group-hover:scale-105 transition-transform shrink-0">
+            <Image
+              src="/logo-polsri.jpg"
+              alt="Logo Resmi Polsri"
+              width={44}
+              height={44}
+              className="object-contain rounded-xl"
+              priority
+            />
           </div>
           <div>
-            <span className="text-2xl font-black text-polsri-900 tracking-tight">
+            <span className="text-xl sm:text-2xl font-black text-polsri-900 tracking-tight flex items-center gap-1">
               POLSRI <span className="text-polsri-600">STORE</span>
             </span>
-            <p className="text-xs text-slate-500 font-medium">Program Mahasiswa Wirausaha</p>
+            <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Program Mahasiswa Wirausaha</p>
           </div>
         </Link>
 

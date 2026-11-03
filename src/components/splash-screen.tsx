@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 
 const loadingSteps = [
   'Menyiapkan etalase produk inovasi mahasiswa...',
@@ -100,16 +101,23 @@ export default function SplashScreen() {
 
           {/* Center Brand Identity */}
           <div className="flex flex-col items-center text-center max-w-lg z-10 space-y-6">
-            {/* Animated Emblem */}
+            {/* Animated Emblem with Official Polsri Logo */}
             <motion.div
               initial={{ scale: 0.7, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: 'easeOut' }}
               className="relative"
             >
-              <div className="absolute -inset-2 bg-gradient-to-r from-polsri-600 to-amber-400 rounded-3xl blur-xl opacity-60 animate-pulse" />
-              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-polsri-800 via-polsri-600 to-polsri-500 border border-white/20 shadow-2xl flex items-center justify-center">
-                <GraduationCap className="w-12 h-12 sm:w-14 sm:h-14 text-amber-300 drop-shadow-md" />
+              <div className="absolute -inset-2 bg-gradient-to-r from-polsri-500 to-amber-400 rounded-3xl blur-xl opacity-60 animate-pulse" />
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white p-2.5 border border-white/30 shadow-2xl flex items-center justify-center">
+                <Image
+                  src="/logo-polsri.jpg"
+                  alt="Logo Resmi Polsri"
+                  width={96}
+                  height={96}
+                  className="object-contain rounded-2xl drop-shadow"
+                  priority
+                />
               </div>
 
               {/* Sparkle badge */}

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   ShoppingBag,
@@ -84,15 +85,22 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-polsri-800 to-polsri-600 flex items-center justify-center text-white shadow-md shadow-polsri-600/30 group-hover:scale-105 transition-transform">
-              <GraduationCap className="w-6 h-6 text-amber-300" />
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shadow-polsri-900/10 border border-slate-200 group-hover:scale-105 transition-transform shrink-0">
+              <Image
+                src="/logo-polsri.jpg"
+                alt="Logo POLSRI"
+                width={40}
+                height={40}
+                className="object-contain rounded-lg"
+                priority
+              />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg sm:text-xl font-black tracking-tight text-polsri-900 flex items-center gap-1">
+              <span className="text-base sm:text-xl font-black tracking-tight text-polsri-900 flex items-center gap-1">
                 POLSRI <span className="text-polsri-600">STORE</span>
               </span>
-              <span className="text-[10px] sm:text-xs text-slate-500 font-medium -mt-1 hidden xs:block">
+              <span className="text-[9px] sm:text-xs text-slate-500 font-medium -mt-0.5 sm:-mt-1 hidden xs:block">
                 Kewirausahaan Mahasiswa
               </span>
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { GraduationCap, MapPin, Mail, Phone, ShieldCheck, CreditCard, Truck, RefreshCw } from 'lucide-react';
 
 export default function Footer() {
@@ -66,8 +67,14 @@ export default function Footer() {
           {/* Brand Info */}
           <div className="md:col-span-1 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-polsri-700 to-polsri-500 flex items-center justify-center text-white font-bold">
-                <GraduationCap className="w-5 h-5 text-amber-300" />
+              <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shrink-0 border border-slate-700">
+                <Image
+                  src="/logo-polsri.jpg"
+                  alt="Logo Resmi Polsri"
+                  width={36}
+                  height={36}
+                  className="object-contain rounded-lg"
+                />
               </div>
               <div>
                 <span className="text-lg font-black tracking-tight text-white">

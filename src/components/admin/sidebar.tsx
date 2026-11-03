@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -69,10 +70,16 @@ export default function AdminSidebar() {
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 min-h-screen flex flex-col justify-between border-r border-slate-800 shrink-0">
       <div>
-        {/* Brand Header */}
+        {/* Brand Header with Official Polsri Logo */}
         <div className="p-5 border-b border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-polsri-700 to-polsri-500 flex items-center justify-center text-white shadow-md">
-            <GraduationCap className="w-6 h-6 text-amber-300" />
+          <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shrink-0">
+            <Image
+              src="/logo-polsri.jpg"
+              alt="Logo Resmi Polsri"
+              width={36}
+              height={36}
+              className="object-contain rounded-lg"
+            />
           </div>
           <div>
             <span className="text-base font-black text-white tracking-tight flex items-center gap-1">

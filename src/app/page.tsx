@@ -127,27 +127,27 @@ export default function HomePage() {
           </section>
 
           {/* Featured Products Section */}
-          <section className="bg-gradient-to-b from-polsri-50/50 to-transparent p-4 sm:p-6 rounded-3xl border border-polsri-100">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-600 flex items-center justify-center font-bold">
-                  <Sparkles className="w-5 h-5 fill-amber-400" />
+          <section className="bg-gradient-to-b from-polsri-50/50 to-transparent p-3.5 sm:p-6 rounded-3xl border border-polsri-100">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-400/20 text-amber-600 flex items-center justify-center font-bold shrink-0">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                  <h2 className="text-base sm:text-2xl font-bold text-slate-900 tracking-tight">
                     Produk Unggulan PMW Polsri
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-500">
-                    Produk terpilih dengan penjualan tertinggi dan ulasan terbaik
+                  <p className="text-[11px] sm:text-sm text-slate-500">
+                    Produk terpilih dengan penjualan tertinggi
                   </p>
                 </div>
               </div>
               <Link
                 href="/products"
-                className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group"
+                className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group whitespace-nowrap shrink-0"
               >
                 <span>Lihat Semua</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
@@ -156,7 +156,7 @@ export default function HomePage() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-20px' }}
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6"
             >
               {featuredProducts.slice(0, 4).map((product) => (
                 <motion.div key={product.id} variants={itemVariants}>
@@ -201,22 +201,22 @@ export default function HomePage() {
 
           {/* All Products Catalog Preview */}
           <section>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-polsri-600" />
+                <h2 className="text-base sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-polsri-600" />
                   Rekomendasi Produk Lainnya
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  Jelajahi beragam inovasi kreatif dari seluruh civitas akademika Polsri
+                <p className="text-[11px] sm:text-sm text-slate-500 mt-0.5 sm:mt-1">
+                  Jelajahi beragam karya civitas akademika Polsri
                 </p>
               </div>
               <Link
                 href="/products"
-                className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group"
+                className="text-xs sm:text-sm font-semibold text-polsri-600 hover:text-polsri-700 flex items-center gap-1 group whitespace-nowrap shrink-0"
               >
-                <span>Buka Katalog Lengkap</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <span>Buka Katalog</span>
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
 
@@ -225,7 +225,7 @@ export default function HomePage() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-20px' }}
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6"
             >
               {activeProducts.map((product) => (
                 <motion.div key={product.id} variants={itemVariants}>

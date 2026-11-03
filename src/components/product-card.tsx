@@ -43,66 +43,66 @@ export default function ProductCard({ product }: ProductCardProps) {
         />
 
         {/* Creator Jurusan Pill */}
-        <div className="absolute top-2.5 left-2.5 bg-polsri-900/85 backdrop-blur-md text-white text-[10px] font-semibold px-2 py-1 rounded-md shadow-sm flex items-center gap-1 border border-white/20">
-          <UserCheck className="w-3 h-3 text-amber-300" />
-          <span className="truncate max-w-[140px]">{product.jurusan}</span>
+        <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 bg-polsri-900/85 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md shadow-sm flex items-center gap-1 border border-white/20">
+          <UserCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-300" />
+          <span className="truncate max-w-[100px] sm:max-w-[140px]">{product.jurusan}</span>
         </div>
 
         {/* Stock Out Overlay if stock is 0 */}
         {product.stock <= 0 && (
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
-              <AlertCircle className="w-3.5 h-3.5" /> Stok Habis
+            <span className="bg-red-600 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-md flex items-center gap-1">
+              <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Stok Habis
             </span>
           </div>
         )}
 
         {/* Featured Tag */}
         {product.is_featured && product.stock > 0 && (
-          <div className="absolute bottom-2.5 left-2.5 bg-amber-500 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
+          <div className="absolute bottom-2 left-2 sm:bottom-2.5 sm:left-2.5 bg-amber-500 text-slate-900 text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded shadow-sm">
             PRODUK UNGGULAN
           </div>
         )}
       </Link>
 
       {/* Product Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
         <div>
           {/* Student Creator Name */}
-          <p className="text-[11px] text-polsri-700 font-medium line-clamp-1 mb-1">
+          <p className="text-[10px] sm:text-[11px] text-polsri-700 font-medium line-clamp-1 mb-0.5 sm:mb-1">
             Oleh: <span className="font-semibold text-slate-700">{product.student_name}</span>
           </p>
 
           {/* Title */}
           <Link href={`/products/${product.id}`} className="block">
-            <h3 className="text-sm font-semibold text-slate-800 group-hover:text-polsri-700 transition-colors line-clamp-2 leading-snug">
+            <h3 className="text-xs sm:text-sm font-semibold text-slate-800 group-hover:text-polsri-700 transition-colors line-clamp-2 leading-snug min-h-[2rem] sm:min-h-[2.5rem]">
               {product.title}
             </h3>
           </Link>
         </div>
 
-        <div className="pt-3 mt-2 border-t border-slate-100">
+        <div className="pt-2 sm:pt-3 mt-1 sm:mt-2 border-t border-slate-100">
           {/* Price */}
-          <div className="text-base sm:text-lg font-bold text-polsri-700">
+          <div className="text-sm sm:text-base md:text-lg font-bold text-polsri-700">
             {formatRupiah(product.price)}
           </div>
 
           {/* Rating and Sold Count */}
-          <div className="flex items-center justify-between text-xs text-slate-500 mt-1.5">
-            <div className="flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+          <div className="flex items-center justify-between text-[10px] sm:text-xs text-slate-500 mt-1">
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-400" />
               <span className="font-semibold text-slate-700">{product.rating.toFixed(1)}</span>
             </div>
-            <span className="text-[11px]">{product.sold_count} terjual</span>
+            <span className="text-[10px] sm:text-[11px]">{product.sold_count} terjual</span>
           </div>
 
           {/* Add to Cart Button with Motion micro-interaction */}
-          <div className="mt-3">
+          <div className="mt-2 sm:mt-3">
             <motion.button
               whileTap={{ scale: 0.96 }}
               onClick={handleAddToCart}
               disabled={product.stock <= 0}
-              className={`w-full py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 ${
+              className={`w-full py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-xl text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 sm:gap-1.5 transition-colors duration-150 ${
                 product.stock <= 0
                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   : added

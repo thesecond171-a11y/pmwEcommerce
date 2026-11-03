@@ -1,19 +1,21 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(request: Request) {
   try {
     const { email, password, fullName, phone } = await request.json();
 
     if (!email || !password) {
-      return NextResponse.json({ error: 'Email dan password wajib diisi' }, { status: 400 });
+      return NextResponse.json({ error: 'Email dan kata sandi wajib diisi' }, { status: 400 });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'Kata sandi minimal 6 karakter' }, { status: 400 });
+    }
 
-    // 1. Create user with email auto-confirmed via admin API
+    const supabaseAdmin = getAdminClient();
+
+    // 1. Create user with email auto-confirmed via Supabase Admin API
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -26,22 +28,40 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      // If already registered in auth.users, fetch their profile and succeed
+      const errLower = error.message.toLowerCase();
+      // If already registered in auth.users, check if profile exists
       if (
-        error.message.toLowerCase().includes('already') ||
-        error.message.toLowerCase().includes('registered') ||
-        error.message.toLowerCase().includes('exists')
+        errLower.includes('already') ||
+        errLower.includes('registered') ||
+        errLower.includes('exists') ||
+        errLower.includes('duplicate')
       ) {
+        // Fetch existing profile
         const { data: existingProfile } = await supabaseAdmin
           .from('profiles')
           .select('*')
           .eq('email', email)
-          .single();
+          .maybeSingle();
+
+        // Ensure profile exists in profiles table
+        if (!existingProfile) {
+          // If profile row missing, try to create it
+          await supabaseAdmin.from('profiles').upsert(
+            {
+              email,
+              full_name: fullName || 'Pelanggan Polsri',
+              phone: phone || '',
+              role: 'customer',
+              city: 'Palembang',
+            },
+            { onConflict: 'email' }
+          );
+        }
 
         return NextResponse.json({
           success: true,
           alreadyRegistered: true,
-          message: 'Akun Anda sudah terdaftar di Supabase. Berhasil masuk!',
+          message: 'Akun Anda sudah terdaftar di Supabase.',
           user: existingProfile || {
             email,
             full_name: fullName || 'Pelanggan Polsri',
@@ -54,7 +74,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // 2. Ensure profile exists in public.profiles
+    // 2. Ensure profile exists in public.profiles table
     const userId = data.user?.id;
     if (userId) {
       await supabaseAdmin.from('profiles').upsert(
@@ -84,7 +104,7 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error('Register API route error:', err);
     return NextResponse.json(
-      { error: err.message || 'Terjadi kesalahan pada pendaftaran' },
+      { error: err.message || 'Terjadi kesalahan pada pendaftaran server' },
       { status: 500 }
     );
   }

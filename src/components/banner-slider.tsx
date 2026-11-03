@@ -75,7 +75,7 @@ export default function BannerSlider() {
 
   return (
     <div className="relative rounded-3xl overflow-hidden shadow-xl border border-slate-200/50">
-      <div className={`relative min-h-[380px] sm:min-h-[440px] bg-gradient-to-r ${activeSlide.bgGradient} transition-colors duration-500 flex items-center`}>
+      <div className={`relative min-h-[320px] sm:min-h-[420px] bg-gradient-to-r ${activeSlide.bgGradient} transition-colors duration-500 flex items-center`}>
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img
@@ -94,29 +94,29 @@ export default function BannerSlider() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -12 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="relative z-10 max-w-7xl mx-auto px-6 sm:px-12 py-12 flex flex-col justify-center max-w-3xl"
+            className="relative z-10 max-w-7xl mx-auto px-5 sm:px-12 py-8 sm:py-12 flex flex-col justify-center max-w-3xl"
           >
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 w-fit shadow-sm bg-white/10 text-white backdrop-blur-md border border-white/20">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>{activeSlide.tag}</span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-4 w-fit shadow-sm bg-white/10 text-white backdrop-blur-md border border-white/20">
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300" />
+              <span className="truncate max-w-[220px] sm:max-w-none">{activeSlide.tag}</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4 drop-shadow-sm">
+            <h1 className="text-xl sm:text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-snug sm:leading-tight mb-2 sm:mb-4 drop-shadow-sm">
               {activeSlide.title}
             </h1>
 
-            <p className="text-sm sm:text-base text-blue-100/90 max-w-xl mb-8 leading-relaxed">
+            <p className="text-xs sm:text-base text-blue-100/90 max-w-xl mb-5 sm:mb-8 leading-relaxed line-clamp-2 sm:line-clamp-none">
               {activeSlide.subtitle}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <Link
                 href={activeSlide.ctaLink}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm shadow-lg shadow-amber-400/20 hover-lift btn-press"
+                className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-amber-400/20 hover-lift btn-press"
               >
                 <ShoppingBag className="w-4 h-4" />
                 <span>{activeSlide.ctaText}</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5" />
               </Link>
 
               <div className="hidden sm:flex items-center gap-2 text-xs text-blue-200 bg-white/5 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/10">
@@ -130,18 +130,18 @@ export default function BannerSlider() {
         {/* Navigation Arrows */}
         <button
           onClick={prevSlide}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm flex items-center justify-center transition-all z-20 border border-white/20 btn-press"
+          className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm flex items-center justify-center transition-all z-20 border border-white/20 btn-press"
           aria-label="Previous slide"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         <button
           onClick={nextSlide}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm flex items-center justify-center transition-all z-20 border border-white/20 btn-press"
+          className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm flex items-center justify-center transition-all z-20 border border-white/20 btn-press"
           aria-label="Next slide"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Indicators Dots */}
