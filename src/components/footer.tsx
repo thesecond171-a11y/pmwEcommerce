@@ -5,7 +5,7 @@ import { GraduationCap, MapPin, Mail, Phone, ShieldCheck, CreditCard, Truck, Ref
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-300 mt-20 border-t border-slate-800">
+    <footer className="bg-slate-900 text-slate-300 mt-12 sm:mt-20 border-t border-slate-800 w-full max-w-full overflow-hidden">
       {/* Value Proposition Highlights */}
       <div className="border-b border-slate-800 bg-slate-950/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -16,8 +16,7 @@ import {
   X,
   FileText,
   LogOut,
-  Sparkles,
-  GraduationCap
+  Sparkles
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 
@@ -25,7 +24,6 @@ export default function Navbar() {
   const router = useRouter();
   const {
     user,
-    switchUserRole,
     logout,
     isAdmin,
     cartCount,
@@ -54,26 +52,26 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm w-full max-w-full overflow-x-hidden">
       {/* Top Bar Announcement */}
-      <div className="bg-polsri-900 text-white text-xs py-1.5 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 bg-polsri-700/70 text-amber-300 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+      <div className="bg-polsri-900 text-white text-xs py-1.5 px-3 sm:px-6 w-full overflow-hidden">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 text-[11px]">
+          <div className="flex items-center gap-2 truncate">
+            <span className="inline-flex items-center gap-1 bg-polsri-700/70 text-amber-300 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold shrink-0">
               <Sparkles className="w-3 h-3" /> PMW POLSRI STORE
             </span>
-            <span className="hidden sm:inline text-blue-100 text-xs">
+            <span className="hidden sm:inline text-blue-100 text-xs truncate">
               Platform Resmi Produk Kewirausahaan Mahasiswa Politeknik Negeri Sriwijaya
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px] text-blue-200">
+          <div className="flex items-center gap-3 text-[10px] sm:text-[11px] text-blue-200 shrink-0">
             <span className="hidden md:inline">Kampus Bukit Besar, Palembang</span>
             <a
               href="https://www.polsri.ac.id"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-300 hover:text-white transition-colors font-medium flex items-center gap-1"
+              className="text-amber-300 hover:text-white transition-colors font-medium flex items-center gap-0.5"
             >
               <span>Portal Polsri &rarr;</span>
             </a>
@@ -82,16 +80,16 @@ export default function Navbar() {
       </div>
 
       {/* Main Navbar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full">
+        <div className="flex items-center justify-between h-14 sm:h-20 gap-2 sm:gap-4">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group shrink-0">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shadow-polsri-900/10 border border-slate-200 group-hover:scale-105 transition-transform shrink-0">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shadow-polsri-900/10 border border-slate-200 group-hover:scale-105 transition-transform shrink-0">
               <Image
-                src="/logo-polsri.png"
+                src="/logo-polsri.jpg"
                 alt="Logo POLSRI"
-                width={40}
-                height={40}
+                width={36}
+                height={36}
                 className="object-contain rounded-lg"
                 priority
               />
@@ -100,7 +98,7 @@ export default function Navbar() {
               <span className="text-base sm:text-xl font-black tracking-tight text-polsri-900 flex items-center gap-1">
                 POLSRI <span className="text-polsri-600">STORE</span>
               </span>
-              <span className="text-[9px] sm:text-xs text-slate-500 font-medium -mt-0.5 sm:-mt-1 hidden xs:block">
+              <span className="text-[9px] sm:text-xs text-slate-500 font-medium -mt-0.5 sm:-mt-1 hidden sm:block">
                 Kewirausahaan Mahasiswa
               </span>
             </div>
@@ -147,7 +145,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar (Desktop) */}
           <form
             onSubmit={handleSearchSubmit}
             className="flex-1 max-w-xl relative hidden sm:block"
@@ -171,8 +169,8 @@ export default function Navbar() {
           </form>
 
           {/* Right Action Icons */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Admin Badge/Link if Admin */}
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {/* Admin Badge/Link if Admin (Desktop) */}
             {isAdmin && (
               <Link
                 href="/admin"
@@ -183,24 +181,24 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Riwayat Pesanan */}
+            {/* Riwayat Pesanan (Desktop Only) */}
             <Link
               href="/orders"
-              className="p-2 sm:px-3 sm:py-2 text-slate-700 hover:text-polsri-600 hover:bg-polsri-50 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              className="hidden sm:flex p-2 sm:px-3 sm:py-2 text-slate-700 hover:text-polsri-600 hover:bg-polsri-50 rounded-lg text-sm font-medium transition-colors items-center gap-1.5"
               title="Pesanan Saya"
             >
               <FileText className="w-5 h-5 text-slate-600" />
               <span className="hidden xl:inline">Pesanan Saya</span>
             </Link>
 
-            {/* Shopping Cart */}
+            {/* Shopping Cart (Always Visible) */}
             <Link
               href="/cart"
               className="relative p-2 sm:px-3 sm:py-2 text-slate-700 hover:text-polsri-600 hover:bg-polsri-50 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
               title="Keranjang Belanja"
             >
               <div className="relative">
-                <ShoppingCart className="w-5 h-5 text-slate-600" />
+                <ShoppingCart className="w-5 h-5 text-slate-700" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-rose-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
                     {cartCount > 99 ? '99+' : cartCount}
@@ -210,17 +208,17 @@ export default function Navbar() {
               <span className="hidden xl:inline">Keranjang</span>
             </Link>
 
-            {/* Divider */}
+            {/* Divider (Desktop Only) */}
             <div className="w-[1px] h-6 bg-slate-200 hidden sm:block"></div>
 
-            {/* User Profile / Menu */}
+            {/* User Profile / Menu (Logged in) */}
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-1.5 sm:gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-polsri-100 border border-polsri-300 flex items-center justify-center text-polsri-800 font-bold text-xs">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-polsri-100 border border-polsri-300 flex items-center justify-center text-polsri-800 font-bold text-xs">
                     {user.full_name ? user.full_name.charAt(0) : 'U'}
                   </div>
                   <div className="hidden md:flex flex-col text-left">
@@ -290,16 +288,17 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 sm:gap-2">
+              /* Desktop Login & Register Buttons (Hidden on mobile) */
+              <div className="hidden sm:flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-bold text-polsri-700 hover:text-polsri-800 hover:bg-polsri-50 rounded-xl transition-colors"
+                  className="px-3.5 py-2 text-xs sm:text-sm font-bold text-polsri-700 hover:text-polsri-800 hover:bg-polsri-50 rounded-xl transition-colors"
                 >
                   Masuk
                 </Link>
                 <Link
                   href="/register"
-                  className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-polsri-600/30 transition-all btn-press"
+                  className="px-4 py-2 bg-polsri-600 hover:bg-polsri-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-polsri-600/30 transition-all btn-press"
                 >
                   Daftar
                 </Link>
@@ -309,7 +308,7 @@ export default function Navbar() {
             {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-slate-600 hover:text-polsri-600 sm:hidden rounded-lg"
+              className="p-1.5 text-slate-700 hover:text-polsri-600 sm:hidden rounded-lg focus:outline-none"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -318,8 +317,8 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Search input */}
-        <div className="pb-3 sm:hidden">
-          <form onSubmit={handleSearchSubmit} className="relative">
+        <div className="pb-2.5 sm:hidden w-full">
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
             <input
               type="text"
               value={localSearch}
@@ -338,9 +337,29 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay Drawer */}
       {mobileMenuOpen && (
-        <div className="sm:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-3 animate-in slide-in-from-top-4 duration-200">
+        <div className="sm:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-4 animate-in slide-in-from-top-4 duration-200 w-full max-w-full">
+          {/* Guest Auth Buttons in Drawer */}
+          {!user && (
+            <div className="grid grid-cols-2 gap-2 pb-2 border-b border-slate-100">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-2.5 text-center text-xs font-bold text-polsri-700 bg-polsri-50 border border-polsri-200 rounded-xl"
+              >
+                Masuk
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-2.5 text-center text-xs font-bold text-white bg-polsri-600 rounded-xl shadow-sm"
+              >
+                Daftar Akun
+              </Link>
+            </div>
+          )}
+
           {isAdmin && (
             <Link
               href="/admin"
@@ -369,7 +388,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-3 space-y-1">
+          <div className="border-t border-slate-100 pt-2 space-y-1">
             <Link
               href="/products"
               onClick={() => setMobileMenuOpen(false)}
@@ -392,7 +411,7 @@ export default function Navbar() {
               Profil & Alamat
             </Link>
 
-            {user ? (
+            {user && (
               <button
                 onClick={() => {
                   logout();
@@ -404,23 +423,6 @@ export default function Navbar() {
                 <LogOut className="w-4 h-4" />
                 <span>Keluar dari Akun</span>
               </button>
-            ) : (
-              <div className="pt-2 flex flex-col gap-2">
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full py-2.5 text-center text-sm font-bold text-polsri-700 bg-polsri-50 rounded-xl"
-                >
-                  Masuk ke Akun
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full py-2.5 text-center text-sm font-bold text-white bg-polsri-600 rounded-xl shadow-sm"
-                >
-                  Daftar Akun Baru
-                </Link>
-              </div>
             )}
           </div>
         </div>
@@ -428,4 +430,3 @@ export default function Navbar() {
     </header>
   );
 }
-

@@ -5,9 +5,10 @@ import Lenis from 'lenis';
 
 export default function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Only initialize smooth scroll on non-touch devices or when user prefers reduced motion is false
+    // Only initialize smooth scroll on desktop non-touch devices
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
+    if (isTouch || prefersReducedMotion) return;
 
     const lenis = new Lenis({
       duration: 1.1,
@@ -35,4 +36,3 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
 
   return <>{children}</>;
 }
-

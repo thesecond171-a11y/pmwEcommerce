@@ -74,7 +74,7 @@ export default function BannerSlider() {
   const activeSlide = slides[current];
 
   return (
-    <div className="relative rounded-3xl overflow-hidden shadow-xl border border-slate-200/50">
+    <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl border border-slate-200/50 w-full max-w-full">
       <div className={`relative min-h-[320px] sm:min-h-[420px] bg-gradient-to-r ${activeSlide.bgGradient} transition-colors duration-500 flex items-center`}>
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">

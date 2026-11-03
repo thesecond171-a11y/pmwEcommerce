@@ -24,7 +24,7 @@ export default function PageTransition({ children }: { children: React.ReactNode
       variants={pageVariants}
       initial="initial"
       animate="animate"
-      className="w-full flex-1 flex flex-col"
+      className="w-full max-w-full flex-1 flex flex-col overflow-x-hidden"
     >
       {children}
     </motion.div>

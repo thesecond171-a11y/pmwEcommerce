@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 import SmoothScrollProvider from '@/components/smooth-scroll';
@@ -20,6 +20,13 @@ export const metadata: Metadata = {
   ],
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#0f172a',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -32,7 +39,7 @@ export default function RootLayout({
     : 'https://app.sandbox.midtrans.com/snap/snap.js';
 
   return (
-    <html lang="id">
+    <html lang="id" className="w-full max-w-full overflow-x-hidden">
       <head>
         {/* Midtrans Snap JS Script */}
         <Script
@@ -41,7 +48,7 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased selection:bg-polsri-500 selection:text-white">
+      <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased selection:bg-polsri-500 selection:text-white w-full max-w-full overflow-x-hidden">
         <SplashScreen />
         <SmoothScrollProvider>
           <AppProvider>

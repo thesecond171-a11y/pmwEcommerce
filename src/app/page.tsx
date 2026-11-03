@@ -51,7 +51,7 @@ export default function HomePage() {
       <Navbar />
 
       <PageTransition>
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-12">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-8 sm:space-y-12 overflow-x-hidden">
           {/* Hero Banner Section */}
           <BannerSlider />
 
