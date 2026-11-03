@@ -27,7 +27,7 @@ export default function Footer() {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-white">Pembayaran Aman Midtrans</h4>
+                <h4 className="text-sm font-semibold text-white">Pembayaran Aman</h4>
                 <p className="text-xs text-slate-400 mt-1">
                   Satu pintu rekening resmi merchant PMW Polsri via QRIS, Virtual Account & E-Wallet.
                 </p>
@@ -181,7 +181,7 @@ export default function Footer() {
                 <span className="bg-slate-800 px-2 py-0.5 rounded border border-slate-700">BCA VA</span>
                 <span className="bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Mandiri</span>
                 <span className="bg-slate-800 px-2 py-0.5 rounded border border-slate-700">ShopeePay</span>
-                <span className="bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Midtrans</span>
+                {/* <span className="bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Midtrans</span> */}
               </div>
             </div>
           </div>
