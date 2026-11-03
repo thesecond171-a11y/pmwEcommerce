@@ -181,7 +181,7 @@ export default function LoginPage() {
           </form>
 
           {/* Quick Credential Hint */}
-          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 text-[11px] text-slate-500 space-y-1">
+          {/* <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 text-[11px] text-slate-500 space-y-1">
             <div className="flex items-center gap-1.5 font-bold text-slate-700">
               <ShieldCheck className="w-3.5 h-3.5 text-polsri-600" />
               <span>Info Akses Akun:</span>
@@ -192,7 +192,7 @@ export default function LoginPage() {
             <p>
               • <strong>Pelanggan:</strong> Gunakan email & kata sandi yang telah Anda daftarkan.
             </p>
-          </div>
+          </div> */}
 
           <p className="text-center text-xs text-slate-500">
             Belum punya akun?{' '}
